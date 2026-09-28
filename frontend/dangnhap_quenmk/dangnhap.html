@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - Bệnh Viện Đa Khoa Tâm Trí Đồng Tháp</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --medical-primary-dark: #0369a1;
+            --medical-primary-mid: #0284c7;
+            --medical-btn: #0ea5e9;
+        }
+
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear,
+        input[type="password"]::-webkit-contacts-auto-fill-button,
+        input[type="password"]::-webkit-credentials-auto-fill-button {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            position: absolute !important;
+            right: -9999px !important;
+            opacity: 0 !important;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 20px;
+            background-image: url('../uploads/img/hinhnen.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 0;
+        }
+
+        .page-wrapper {
+            width: 100%;
+            max-width: 880px;
+            min-height: 500px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow:
+                0 20px 50px rgba(0, 0, 0, 0.4),
+                0 10px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            margin: auto;
+        }
+
+        .left-section {
+            flex: 1.2;
+            background-image: url('../uploads/img/hinhnen.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-color: #0f172a;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(3, 105, 161, 0.35) 0%,
+                rgba(14, 165, 233, 0.15) 50%,
+                rgba(15, 23, 42, 0.4) 100%
+            );
+            z-index: 2;
+        }
+
+        .right-section {
+            flex: 1;
+            background: var(--medical-primary-dark);
+            color: #ffffff;
+            padding: 35px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            box-shadow: -10px 0 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .wave-divider {
+            position: absolute;
+            top: 0;
+            left: -70px;
+            height: 100%;
+            width: 75px;
+            z-index: 3;
+            pointer-events: none;
+            filter: drop-shadow(-5px 0 6px rgba(0, 0, 0, 0.12));
+        }
+
+        .wave-divider svg {
+            height: 100%;
+            width: 100%;
+        }
+
+        .login-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .form-group-custom {
+            margin-bottom: 16px;
+        }
+
+        .form-group-custom label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.92);
+            margin-bottom: 6px;
+        }
+
+        .input-box-custom {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--medical-primary-mid);
+            border-radius: 25px;
+            padding: 2px 16px;
+            border: 1.5px solid transparent;
+            transition: all 0.25s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-box-custom:focus-within {
+            border-color: #38bdf8;
+            background: #075985;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-box-custom .input-icon {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            margin-right: 10px;
+        }
+
+        .input-box-custom input {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 0.88rem;
+            width: 100%;
+            padding: 9px 0;
+            outline: none;
+            -webkit-box-shadow: 0 0 0 30px var(--medical-primary-mid) inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            caret-color: #ffffff;
+        }
+
+        .input-box-custom input::placeholder {
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .input-box-custom input:-webkit-autofill,
+        .input-box-custom input:-webkit-autofill:hover,
+        .input-box-custom input:-webkit-autofill:focus,
+        .input-box-custom input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px var(--medical-primary-mid) inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .btn-toggle-pw {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.75);
+            cursor: pointer;
+            padding: 0 4px;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .btn-toggle-pw:hover {
+            color: #ffffff;
+        }
+
+        .btn-submit-custom {
+            background: var(--medical-btn);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            border-radius: 25px;
+            padding: 10px 20px;
+            border: none;
+            width: 100%;
+            margin-top: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 5px 15px rgba(14, 165, 233, 0.35);
+            text-transform: uppercase;
+        }
+
+        .btn-submit-custom:hover {
+            background: #38bdf8;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.45);
+            color: #ffffff;
+        }
+
+        .btn-submit-custom:disabled {
+            opacity: 0.75;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .bottom-links {
+            margin-top: 18px;
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .bottom-links a {
+            color: #7dd3fc;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .bottom-links a:hover {
+            text-decoration: underline;
+        }
+
+        .alert-custom {
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 850px) {
+            .page-wrapper {
+                flex-direction: column;
+                max-width: 420px;
+                min-height: auto;
+            }
+            .left-section { min-height: 140px; }
+            .right-section { padding: 25px 20px; }
+            .wave-divider { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+    <div class="left-section"></div>
+
+    <div class="right-section">
+        <div class="wave-divider">
+            <svg viewBox="0 0 100 500" preserveAspectRatio="none">
+                <path d="M100,0 C25,150 100,300 0,500 L100,500 Z" fill="#0369a1"></path>
+            </svg>
+        </div>
+
+        <div style="max-width: 340px; width: 100%; margin: 0 auto;">
+            <h2 class="login-title text-center">ĐĂNG NHẬP</h2>
+
+            <div id="alertBox" class="alert alert-danger alert-custom d-none align-items-center gap-2" role="alert">
+                <i class="fas fa-exclamation-circle fs-6"></i>
+                <div id="alertMessage"></div>
+            </div>
+
+            <form id="loginForm" novalidate autocomplete="off">
+
+                <input type="text" name="fake_username" id="fake_username"
+                       style="display: none;" tabindex="-1" autocomplete="off">
+                <input type="password" name="fake_password" id="fake_password"
+                       style="display: none;" tabindex="-1" autocomplete="off">
+
+                <input type="hidden" name="csrf_token" id="csrfToken" value="">
+
+                <div class="form-group-custom">
+                    <label for="username">Tên đăng nhập</label>
+                    <div class="input-box-custom">
+                        <i class="fas fa-id-card input-icon"></i>
+                        <input type="text"
+                               name="username"
+                               id="username"
+                               placeholder="Tên đăng nhập hoặc mã nhân viên"
+                               required
+                               autofocus
+                               autocomplete="off"
+                               autocorrect="off"
+                               autocapitalize="off"
+                               spellcheck="false"
+                               readonly
+                               onfocus="this.removeAttribute('readonly')">
+                    </div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label for="password">Mật khẩu</label>
+                    <div class="input-box-custom">
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="password"
+                               name="password"
+                               id="password"
+                               placeholder="Nhập mật khẩu"
+                               required
+                               autocomplete="new-password"
+                               readonly
+                               onfocus="this.removeAttribute('readonly')">
+                        <button type="button" class="btn-toggle-pw" id="btnTogglePassword" title="Hiện/Ẩn mật khẩu">
+                            <i class="fas fa-eye" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit-custom" id="btnSubmit">
+                    ĐĂNG NHẬP <i class="fas fa-arrow-right ms-1" style="font-size: 0.85rem;"></i>
+                </button>
+            </form>
+
+            <div class="bottom-links text-center">
+                <span>Bạn quên mật khẩu?</span>
+                <a href="quenmk.html" class="ms-1">Đặt lại mật khẩu</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ============================================================
+   CẤU HÌNH
+   ============================================================ */
+const CONFIG = {
+    API_LOGIN_URL:    '../../backend/api/dangnhap.php',
+    API_CSRF_URL:     '../../backend/api/csrf.php',
+    DEFAULT_REDIRECT: '../home/trangchu.html'
+};
+
+/* ============================================================
+   XÓA AUTOFILL KHI LOAD TRANG
+   ============================================================ */
+window.addEventListener('load', function () {
+    setTimeout(function () {
+        const u = document.getElementById('username');
+        const p = document.getElementById('password');
+        if (u) u.value = '';
+        if (p) p.value = '';
+    }, 100);
+});
+
+/* ============================================================
+   NẠP CSRF TOKEN
+   ============================================================ */
+(async function loadCsrf() {
+    try {
+        const res = await fetch(CONFIG.API_CSRF_URL, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.csrf_token) {
+            document.getElementById('csrfToken').value = data.csrf_token;
+            console.log('[Login] CSRF token loaded');
+        }
+    } catch (e) {
+        console.warn('[Login] Không lấy được CSRF token:', e);
+    }
+})();
+
+/* ============================================================
+   TOGGLE PASSWORD
+   ============================================================ */
+document.getElementById('btnTogglePassword').addEventListener('click', function () {
+    const pwInput = document.getElementById('password');
+    const icon = document.getElementById('toggleIcon');
+    if (pwInput.type === 'password') {
+        pwInput.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        pwInput.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+});
+
+/* ============================================================
+   SUBMIT FORM
+   ============================================================ */
+document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const alertBox     = document.getElementById('alertBox');
+    const alertMessage = document.getElementById('alertMessage');
+    const btnSubmit    = document.getElementById('btnSubmit');
+    const username     = document.getElementById('username').value.trim();
+    const password     = document.getElementById('password').value;
+
+    if (!username || !password) {
+        alertMessage.innerText = 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!';
+        alertBox.classList.remove('d-none');
+        return;
+    }
+
+    alertBox.classList.add('d-none');
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang xử lý...';
+
+    const formData = new FormData(this);
+    formData.delete('fake_username');
+    formData.delete('fake_password');
+
+    try {
+        const response = await fetch(CONFIG.API_LOGIN_URL, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        let result;
+        try {
+            result = await response.json();
+        } catch (parseErr) {
+            throw new Error('Backend không trả về JSON hợp lệ.');
+        }
+
+        console.log('[Login] Response:', response.status, result);
+
+        if (response.ok && result.success) {
+            window.location.href = result.redirect_url || CONFIG.DEFAULT_REDIRECT;
+        } else {
+            alertMessage.innerText = result.message || 'Tài khoản hoặc mật khẩu không chính xác!';
+            alertBox.classList.remove('d-none');
+        }
+    } catch (error) {
+        console.error('[Login] Error:', error);
+        alertMessage.innerText = 'Đã xảy ra lỗi kết nối hệ thống! Vui lòng thử lại sau.';
+        alertBox.classList.remove('d-none');
+    } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = 'ĐĂNG NHẬP <i class="fas fa-arrow-right ms-1" style="font-size: 0.85rem;"></i>';
+    }
+});
+</script>
+
+</body>
+</html>

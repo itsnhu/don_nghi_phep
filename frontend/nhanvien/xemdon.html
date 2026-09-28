@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chi Tiết Giấy Nghỉ Phép - Hệ Thống Quản Lý Giấy Nghỉ Phép</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   GLOBAL
+   ============================================================ */
+* { box-sizing: border-box; }
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f4f8fd; color: #1e293b; margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
+.app-wrapper { display: flex; min-height: 100vh; }
+.app-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.app-sidebar {
+    width: 320px; background: #fbfdff; border-right: 1px solid #e8f1fb;
+    height: 100vh; position: fixed; left: 0; top: 0;
+    display: flex; flex-direction: column; overflow: hidden;
+    z-index: 40; transform: translateX(-100%);
+    transition: transform 0.32s cubic-bezier(.22,.9,.3,1);
+    box-shadow: 0 0 44px rgba(20, 60, 110, 0.12);
+}
+.app-sidebar.open { transform: translateX(0); }
+
+.sidebar-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 20px 18px 18px; flex-shrink: 0;
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #6FB4F0 0%, #4A90E2 100%);
+}
+.sidebar-header::after {
+    content: ""; position: absolute; right: -40px; top: -50px;
+    width: 140px; height: 140px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.10); pointer-events: none;
+}
+.sidebar-header > * { position: relative; z-index: 1; }
+.sidebar-logo {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: rgba(255, 255, 255, 0.22); backdrop-filter: blur(6px);
+    display: grid; place-items: center;
+    box-shadow: 0 4px 12px rgba(20, 60, 110, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0; color: #fff; font-size: 22px;
+}
+.sidebar-brand-text { flex: 1; min-width: 0; text-align: center; padding-right: 8px; }
+.sidebar-title {
+    font-size: 13.5px; font-weight: 700; letter-spacing: -0.2px;
+    color: #fff; line-height: 1.3;
+    white-space: normal; word-break: break-word;
+}
+.sidebar-subtitle {
+    font-size: 10.5px; color: rgba(255, 255, 255, 0.9);
+    font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;
+    margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.sidebar-menu {
+    flex: 1; display: flex; flex-direction: column; gap: 3px;
+    padding: 8px 14px 12px; margin: 0; list-style: none;
+    overflow-y: auto; overflow-x: hidden; min-height: 0;
+    scrollbar-width: none;
+}
+.sidebar-menu::-webkit-scrollbar { width: 0; }
+
+.menu-category {
+    padding: 18px 10px 8px;
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    color: #a8c0d6; list-style: none;
+}
+.menu-category:first-child { padding-top: 12px; }
+
+.menu-item { list-style: none; }
+.menu-item a {
+    display: flex; align-items: center; gap: 13px;
+    padding: 12px 14px; border-radius: 12px;
+    color: #64748b; font-weight: 600; font-size: 14px;
+    text-decoration: none; transition: all 0.22s ease;
+    position: relative; line-height: 1.3;
+}
+.menu-item a i {
+    font-size: 16.5px; width: 20px;
+    text-align: center; flex-shrink: 0;
+    color: #94aecb; transition: color 0.22s ease;
+}
+.menu-item a > span:not(.menu-badge) {
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.menu-item a:hover { background: #f0f7ff; color: #4A90E2; }
+.menu-item a:hover i { color: #5FA5EC; }
+
+.menu-item.active a {
+    background: linear-gradient(135deg, #eaf4ff 0%, #f5faff 100%);
+    color: #357ABD; box-shadow: inset 0 0 0 1px #d8e9fc;
+}
+.menu-item.active a i { color: #4A90E2; }
+.menu-item.active a::before {
+    content: ""; position: absolute;
+    left: -14px; top: 50%; transform: translateY(-50%);
+    width: 4px; height: 24px; border-radius: 0 4px 4px 0;
+    background: #5FA5EC;
+}
+
+.menu-item .menu-badge {
+    margin-left: auto;
+    background: #fff5e6; color: #d18f2b;
+    font-size: 11.5px; font-weight: 700;
+    padding: 3px 9px; border-radius: 20px;
+    flex: 0 0 auto; display: inline-flex;
+    align-items: center; justify-content: center;
+    min-width: 26px; height: 22px;
+    line-height: 1; white-space: nowrap;
+}
+
+.sidebar-footer {
+    flex-shrink: 0; padding: 14px 16px 18px;
+    border-top: 1px solid #e8f1fb; background: #fbfdff;
+}
+.user-compact-info {
+    background: linear-gradient(140deg, #f2f8ff 0%, #fbfdff 100%);
+    border: 1px solid #dcecfb; border-radius: 14px;
+    padding: 12px 14px;
+    transition: all 0.2s ease;
+}
+.user-compact-info:hover {
+    border-color: #c9e0f9;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.08);
+}
+.user-compact-info .user-name {
+    font-size: 13.5px; font-weight: 700; color: #1e3a5f;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 3px; line-height: 1.3;
+}
+.user-compact-info .user-role {
+    font-size: 11.5px; color: #8aa8c7;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.sb-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.42); z-index: 35;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s; backdrop-filter: blur(2px);
+}
+.sb-overlay.show { opacity: 1; pointer-events: auto; }
+
+/* ============================================================
+   TOP NAVBAR
+   ============================================================ */
+.app-navbar {
+    height: 72px; background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #e8f1fb;
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 30px; position: sticky; top: 0;
+    z-index: 20; flex-shrink: 0;
+}
+.btn-hamburger {
+    width: 42px; height: 42px; border-radius: 12px;
+    border: 1px solid #e8f1fb; background: #ffffff;
+    color: #4A90E2; font-size: 17px;
+    display: grid; place-items: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+.btn-hamburger:hover { background: #eaf4ff; border-color: #c9e0f9; color: #357ABD; }
+.btn-hamburger:active { transform: scale(0.95); }
+
+/* NOTIFICATION BELL */
+.notif-bell-btn {
+    width: 42px; height: 42px; border-radius: 12px;
+    border: 1px solid #c9e0f9;
+    background: linear-gradient(135deg, #eaf4ff 0%, #f5faff 100%);
+    color: #4A90E2; font-size: 16px;
+    display: grid; place-items: center;
+    cursor: pointer; position: relative;
+    transition: all 0.2s ease; padding: 0;
+}
+.notif-bell-btn:hover {
+    background: linear-gradient(135deg, #dcefff 0%, #eaf4ff 100%);
+    border-color: #5FA5EC;
+    color: #357ABD;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.18);
+}
+.notif-bell-btn:active { transform: translateY(0); }
+.notif-bell-btn i { color: #4A90E2; }
+.notif-bell-btn .notif-badge-count {
+    position: absolute;
+    top: -5px; right: -5px;
+    min-width: 20px; height: 20px;
+    padding: 0 6px;
+    background: #ef4444; color: #fff;
+    font-size: 0.68rem; font-weight: 700;
+    border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2px solid #fff;
+    line-height: 1;
+}
+
+.notif-dropdown-menu {
+    width: 390px;
+    max-width: calc(100vw - 28px);
+    padding: 0;
+    border: none; border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(15, 23, 42, 0.15);
+    margin-top: 8px;
+}
+.notif-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eef2f7;
+    background: #f8fbff;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.notif-header .title-wrap {
+    display: flex; align-items: center; gap: 8px;
+}
+.notif-header .title-wrap .title {
+    font-weight: 700; color: #0f172a; font-size: 0.95rem;
+}
+.notif-header .title-wrap .title i { color: #4A90E2; }
+.notif-header .unread-pill {
+    background: #4A90E2; color: #fff;
+    font-size: 0.72rem; font-weight: 600;
+    padding: 2px 10px; border-radius: 20px;
+}
+.notif-header .mark-all-btn {
+    background: transparent; border: none;
+    color: #4A90E2; font-size: 0.78rem; font-weight: 600;
+    cursor: pointer; padding: 0; text-decoration: none;
+}
+.notif-header .mark-all-btn:hover { text-decoration: underline; }
+
+.notif-scroll-container { max-height: 380px; overflow-y: auto; }
+.notif-scroll-container::-webkit-scrollbar { width: 6px; }
+.notif-scroll-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1; border-radius: 3px;
+}
+.notif-scroll-container::-webkit-scrollbar-track { background: #f1f5f9; }
+
+.notif-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    text-decoration: none; color: inherit;
+    background-color: #f8fbff;
+    transition: background 0.15s;
+}
+.notif-item:hover { background-color: #eef6ff; }
+.notif-item:last-child { border-bottom: none; }
+
+.notif-item .notif-icon {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 4px;
+}
+.notif-item .notif-icon i { font-size: 0.9rem; }
+.notif-item .notif-body { flex: 1; overflow: hidden; }
+.notif-item .notif-title-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 4px;
+}
+.notif-item .notif-title {
+    font-weight: 600; color: #0f172a; font-size: 0.88rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.notif-item .notif-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #4A90E2; flex-shrink: 0;
+}
+.notif-item .notif-content {
+    color: #64748b; font-size: 0.8rem;
+    line-height: 1.35; margin-top: 4px;
+    word-break: break-word;
+}
+.notif-item .notif-time {
+    color: #94a3b8; font-size: 0.72rem;
+    display: flex; align-items: center; gap: 4px;
+    margin-top: 4px;
+}
+
+.notif-empty-state { padding: 32px 20px; text-align: center; color: #94a3b8; }
+.notif-empty-state .empty-icon {
+    font-size: 28px; color: #cbd5e1;
+    display: block; margin-bottom: 8px;
+}
+.notif-empty-state .empty-title {
+    font-weight: 600; color: #0f172a; font-size: 0.85rem;
+}
+.notif-empty-state .empty-desc {
+    font-size: 0.75rem; color: #94a3b8; margin-top: 4px;
+}
+
+/* USER BUTTON NAVBAR */
+.user-nav-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 16px; border-radius: 999px;
+    border: 1px solid #e8f1fb; background: #ffffff;
+    cursor: pointer; transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    font-family: inherit;
+}
+.user-nav-btn:hover { background: #f0f7ff; border-color: #c9e0f9; }
+.user-nav-btn .text-block {
+    display: flex; flex-direction: column;
+    align-items: flex-start; line-height: 1.25;
+}
+.user-nav-btn .text-block .name {
+    font-size: 13px; font-weight: 700;
+    color: #0f172a; white-space: nowrap;
+}
+.user-nav-btn .text-block .role {
+    font-size: 11.5px; color: #94a3b8; white-space: nowrap;
+}
+.user-nav-btn .chevron { color: #94a3b8; font-size: 11px; margin-left: 2px; }
+
+.dropdown-header-user {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid #eef2f7;
+    background: #f8fbff;
+    border-radius: 12px 12px 0 0;
+}
+.dropdown-header-user .name {
+    font-size: 14px; font-weight: 700; color: #0f172a;
+    margin-bottom: 4px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+}
+.dropdown-header-user .role-badge-sm {
+    display: inline-block; padding: 2px 10px;
+    background: #eaf3fd; color: #1d6fc7;
+    font-size: 11px; font-weight: 600;
+    border-radius: 20px; line-height: 1.4;
+}
+.dropdown-header-user .dept {
+    margin-top: 8px; font-size: 12.5px; color: #64748b;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dropdown-header-user .dept i { color: #94a3b8; margin-right: 4px; }
+
+/* ============================================================
+   CONTENT BODY
+   ============================================================ */
+.content-body { flex: 1; padding: 28px 30px 44px; overflow-x: hidden; }
+
+.page-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.page-head h4 {
+    font-size: 20px; font-weight: 700; color: #0f172a;
+    margin: 0 0 4px 0; letter-spacing: -0.4px;
+}
+.page-head h4 span { color: #4A90E2; font-family: 'SF Mono', Consolas, monospace; }
+.page-head .sub { font-size: 13px; color: #94a3b8; }
+.page-head .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.btn-head {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 18px; border-radius: 11px;
+    font-family: inherit; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s ease;
+    text-decoration: none; line-height: 1; border: 1px solid transparent;
+}
+.btn-head-outline {
+    background: #fff; color: #64748b; border-color: #e2e8f0;
+}
+.btn-head-outline:hover { background: #f8fafc; color: #4A90E2; border-color: #c9e0f9; }
+.btn-head-primary {
+    background: linear-gradient(135deg, #5FA5EC, #4A90E2);
+    color: #fff; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.28);
+}
+.btn-head-primary:hover { transform: translateY(-1px); color: #fff;
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.38); }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card-modern {
+    border: none; border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    overflow: hidden; background: #fff;
+    margin-bottom: 20px;
+}
+.card-modern .card-header {
+    padding: 16px 22px; background: #ffffff;
+    border-bottom: 1px solid #eef2f7;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+}
+.card-modern .card-header h6 {
+    font-size: 14.5px; font-weight: 700; color: #0f172a;
+    display: flex; align-items: center; gap: 10px; margin: 0;
+}
+.card-modern .card-header h6 i { color: #4A90E2; }
+.card-modern .card-body { padding: 22px; }
+
+.info-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px 24px;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #eef2f7;
+}
+.info-row:last-child { border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+.info-item label {
+    display: block;
+    font-size: 12.5px; color: #94a3b8; font-weight: 600;
+    margin-bottom: 4px;
+}
+.info-item .value {
+    font-size: 14.5px; font-weight: 600; color: #0f172a;
+    line-height: 1.4;
+}
+.info-item .value.primary { color: #4A90E2; }
+.info-item .value.success { color: #047857; font-size: 17px; }
+.info-item .value.big { font-size: 17px; }
+
+.reason-box {
+    background: #f8fafc; border: 1px solid #eef2f7;
+    border-radius: 10px; padding: 12px 16px;
+    color: #334155; font-size: 14px; line-height: 1.55;
+    word-break: break-word;
+}
+
+.sig-preview-box {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 80px; padding: 8px 12px;
+    border: 1px solid #e2e8f0; border-radius: 10px;
+    background: #fff; max-width: 240px;
+}
+.sig-preview-box img { max-height: 70px; max-width: 100%; }
+
+/* ============================================================
+   TIMELINE
+   ============================================================ */
+.timeline-list {
+    list-style: none; padding: 0; margin: 0;
+    position: relative;
+}
+.timeline-item {
+    padding: 14px 14px 14px 40px;
+    border-radius: 12px;
+    background: #f8fafc;
+    margin-bottom: 12px;
+    position: relative;
+    border-left: 3px solid #cbd5e1;
+}
+.timeline-item:last-child { margin-bottom: 0; }
+.timeline-item::before {
+    content: ""; position: absolute; left: 12px; top: 18px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #94a3b8; border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #e2e8f0;
+}
+.timeline-item.approved { border-left-color: #22c55e; background: #f0fdf4; }
+.timeline-item.approved::before { background: #22c55e; box-shadow: 0 0 0 2px #bbf7d0; }
+.timeline-item.rejected { border-left-color: #ef4444; background: #fef2f2; }
+.timeline-item.rejected::before { background: #ef4444; box-shadow: 0 0 0 2px #fecaca; }
+
+.quota-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; font-size: 13.5px;
+    border-bottom: 1px dashed #eef2f7;
+}
+.quota-row:last-child { border-bottom: none; padding-bottom: 0; }
+.quota-row span { color: #64748b; font-weight: 500; }
+.quota-row strong { font-size: 14.5px; color: #0f172a; }
+.quota-row strong.warning { color: #c2410c; }
+.quota-row strong.success { color: #047857; }
+
+/* ============================================================
+   MODAL PROFILE — ĐỒNG BỘ VỚI LICHSU
+   ============================================================ */
+.modal-profile .modal-content {
+    border: none; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+}
+.modal-profile .modal-header {
+    background: #ffffff; border-bottom: 1px solid #eef2f7;
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.modal-profile .modal-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 700; color: #0f172a; margin: 0;
+}
+.modal-profile .title-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #eaf4ff; display: grid; place-items: center;
+    color: #4A90E2; font-size: 14px; flex-shrink: 0;
+}
+.modal-profile .btn-close-custom {
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: #f1f5f9; color: #64748b;
+    display: grid; place-items: center;
+    cursor: pointer; transition: all 0.2s; font-size: 12px;
+}
+.modal-profile .btn-close-custom:hover { background: #e2e8f0; color: #334155; }
+
+.modal-profile .profile-tabs {
+    display: flex; gap: 4px; padding: 0 18px;
+    border-bottom: 1px solid #eef2f7; background: #ffffff;
+}
+.modal-profile .profile-tab {
+    position: relative; padding: 10px 14px; border: none;
+    background: transparent; color: #94a3b8; font-size: 13px;
+    font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: color 0.2s; font-family: inherit;
+}
+.modal-profile .profile-tab i { font-size: 13px; }
+.modal-profile .profile-tab:hover { color: #64748b; }
+.modal-profile .profile-tab.active { color: #4A90E2; }
+.modal-profile .profile-tab.active::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px;
+    height: 3px; background: #4A90E2; border-radius: 3px 3px 0 0;
+}
+
+.modal-profile .modal-body {
+    padding: 0; background: #ffffff;
+    max-height: 60vh; overflow-y: auto;
+}
+.modal-profile .tab-pane {
+    display: none; padding: 18px 20px 20px;
+    animation: tabFade 0.25s ease;
+}
+.modal-profile .tab-pane.active { display: block; }
+@keyframes tabFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.form-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px 14px; margin-bottom: 12px;
+}
+.form-row.full { grid-template-columns: 1fr; }
+.form-group-profile {
+    display: flex; flex-direction: column; gap: 5px;
+}
+.form-group-profile label {
+    font-size: 12.5px; font-weight: 600; color: #334155;
+}
+.form-group-profile label .req { color: #ef4444; margin-left: 2px; }
+.form-group-profile input,
+.form-group-profile select {
+    width: 100%; padding: 9px 12px;
+    border: 1.5px solid #e2e8f0; border-radius: 8px;
+    background: #ffffff; font-family: inherit;
+    font-size: 13px; color: #1e293b;
+    transition: all 0.2s; outline: none;
+}
+.form-group-profile input:focus,
+.form-group-profile select:focus {
+    border-color: #4A90E2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+.form-group-profile input::placeholder { color: #cbd5e1; }
+.form-group-profile input:disabled {
+    background: #f8fafc; color: #64748b; cursor: not-allowed;
+}
+
+#inp_hoten { text-transform: uppercase; letter-spacing: 0.2px; }
+
+.form-group-profile input.is-invalid,
+.form-group-profile input.is-invalid:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+.form-group-profile .field-error {
+    display: none; font-size: 11.5px;
+    color: #dc2626; margin-top: 2px;
+    align-items: center; gap: 4px; line-height: 1.3;
+}
+.form-group-profile .field-error.show { display: flex; }
+.form-group-profile .field-error i { font-size: 10px; flex-shrink: 0; }
+
+.reset-info-banner {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px;
+    font-size: 12.5px; margin-bottom: 12px;
+    background: #eaf4ff; border: 1px solid #c9e0f9; color: #357ABD;
+}
+.reset-info-banner i { font-size: 13px; flex-shrink: 0; }
+
+.pw-rules {
+    background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 8px; padding: 8px 12px;
+    margin-top: 6px; font-size: 11.5px;
+}
+.pw-rules .rule {
+    display: flex; align-items: center; gap: 6px;
+    padding: 2px 0; color: #94a3b8; transition: color 0.2s;
+}
+.pw-rules .rule i {
+    width: 13px; text-align: center;
+    font-size: 10px; color: #cbd5e1; transition: color 0.2s;
+}
+.pw-rules .rule.ok { color: #059669; }
+.pw-rules .rule.ok i { color: #22c55e; }
+
+.modal-profile .modal-footer {
+    padding: 12px 20px; background: #ffffff;
+    border-top: 1px solid #eef2f7;
+    display: flex; justify-content: flex-end; gap: 10px;
+}
+.modal-profile .btn-cancel {
+    padding: 8px 18px; border: none; background: transparent;
+    color: #64748b; font-size: 13px; font-weight: 600;
+    border-radius: 8px; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+}
+.modal-profile .btn-cancel:hover { background: #f1f5f9; color: #334155; }
+.modal-profile .btn-save {
+    padding: 8px 20px; border: none;
+    background: linear-gradient(135deg, #5FA5EC 0%, #4A90E2 100%);
+    color: #ffffff; font-size: 13px; font-weight: 700;
+    border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: inherit;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.28);
+}
+.modal-profile .btn-save:hover {
+    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.38);
+}
+.modal-profile .btn-save:disabled {
+    opacity: 0.6; cursor: not-allowed; transform: none;
+}
+
+.profile-alert {
+    padding: 8px 12px; border-radius: 8px;
+    font-size: 12.5px; margin-bottom: 12px; display: none;
+}
+.profile-alert.show { display: block; }
+.profile-alert.success {
+    background: #e8f9ee; color: #16a34a; border: 1px solid #bbf7d0;
+}
+.profile-alert.error {
+    background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
+}
+
+/* ============================================================
+   LOADING / ERROR STATE
+   ============================================================ */
+.state-box {
+    text-align: center; padding: 60px 20px;
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+.state-box .spinner-border { width: 44px; height: 44px; color: #4A90E2; }
+.state-box .state-icon {
+    font-size: 48px; color: #cbd5e1; margin-bottom: 16px;
+}
+.state-box .state-msg { font-size: 15px; color: #64748b; margin-top: 12px; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1199.98px) {
+    .info-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 991.98px) {
+    .app-navbar { padding: 0 18px; }
+    .content-body { padding: 20px 18px 40px; }
+    .notif-dropdown-menu { width: 320px; }
+}
+@media (max-width: 767.98px) {
+    .info-row { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .modal-profile .tab-pane { padding: 16px 16px 18px; }
+    .page-head h4 { font-size: 17px; }
+    .user-nav-btn .text-block { display: none; }
+    .notif-dropdown-menu { width: calc(100vw - 28px); }
+}
+@media (max-width: 380px) {
+    .app-sidebar { width: 90vw; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo"><i class="fas fa-hospital"></i></div>
+            <div class="sidebar-brand-text">
+                <div class="sidebar-title">BỆNH VIỆN TÂM TRÍ ĐỒNG THÁP</div>
+                <div class="sidebar-subtitle">Tập đoàn Y khoa TMMC</div>
+            </div>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="menu-category">MENU CHỨC NĂNG</li>
+            <li class="menu-item">
+                <a href="../home/trangchu.html">
+                    <i class="fas fa-th-large"></i>
+                    <span>Tổng quan</span>
+                </a>
+            </li>
+
+            <li class="menu-category">Nghỉ phép</li>
+            <li class="menu-item">
+                <a href="taodon.html">
+                    <i class="fas fa-file-circle-plus"></i>
+                    <span>Tạo giấy nghỉ phép</span>
+                </a>
+            </li>
+            <li class="menu-item active">
+                <a href="lichsu.html">
+                    <i class="fas fa-clock-rotate-left"></i>
+                    <span>Lịch sử đã xin nghỉ</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="user-compact-info">
+                <div class="user-name" id="sbUserName">Đang tải...</div>
+                <div class="user-role" id="sbUserRole">—</div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="sb-overlay" id="sbOverlay"></div>
+
+    <!-- MAIN -->
+    <div class="app-main">
+
+        <header class="app-navbar">
+            <button class="btn-hamburger" id="sidebarToggle" type="button" title="Mở menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div style="flex: 1;"></div>
+
+            <div class="d-flex align-items-center gap-3">
+
+                <!-- NOTIFICATIONS -->
+                <div class="dropdown">
+                    <button class="notif-bell-btn" type="button" id="btnNotificationBell"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+                            title="Thông báo">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-badge-count d-none" id="notifBadgeCount">0</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end notif-dropdown-menu"
+                         aria-labelledby="btnNotificationBell">
+                        <div class="notif-header">
+                            <div class="title-wrap">
+                                <span class="title"><i class="fas fa-bell me-1"></i>Thông báo</span>
+                                <span class="unread-pill d-none" id="notifUnreadText">0 mới</span>
+                            </div>
+                            <button type="button" class="mark-all-btn btn-mark-all-read-ajax d-none"
+                                    id="notifMarkAllBtn">
+                                <i class="fas fa-check-double me-1"></i>Đọc tất cả
+                            </button>
+                        </div>
+                        <div class="notif-scroll-container" id="notifScrollContainer">
+                            <div class="notif-empty-state">
+                                <i class="fas fa-spinner fa-spin empty-icon"></i>
+                                <div class="empty-title">Đang tải thông báo...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- USER -->
+                <div class="dropdown">
+                    <button class="user-nav-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="text-block">
+                            <span class="name" id="navUserName">Đang tải...</span>
+                            <span class="role" id="navUserRole">—</span>
+                        </div>
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-0"
+                        style="min-width: 240px; border-radius: 12px; overflow: hidden;">
+                        <li class="dropdown-header-user">
+                            <div class="name" id="ddUserName">Đang tải...</div>
+                            <div class="role-badge-sm" id="ddUserRole">—</div>
+                            <div class="dept">
+                                <i class="fas fa-building"></i>
+                                <span id="ddUserDept">Bộ phận chưa cập nhật</span>
+                            </div>
+                        </li>
+                        <li class="py-1">
+                            <a class="dropdown-item py-2 px-3 fw-medium text-dark"
+                               href="#" data-bs-toggle="modal" data-bs-target="#modalThongTinTaiKhoan"
+                               data-open-tab="info">
+                                <i class="fas fa-user-circle text-success me-2" style="width: 18px;"></i>Thông tin cá nhân
+                            </a>
+                        </li>
+                        <li class="pb-1">
+                            <a class="dropdown-item py-2 px-3 fw-medium text-dark"
+                               href="#" data-bs-toggle="modal" data-bs-target="#modalThongTinTaiKhoan"
+                               data-open-tab="password">
+                                <i class="fas fa-unlock-keyhole text-warning me-2" style="width: 18px;"></i>Quên mật khẩu
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-0"></li>
+                        <li class="py-1">
+                            <a class="dropdown-item py-2 px-3 fw-medium text-danger"
+                               href="#" data-bs-toggle="modal" data-bs-target="#modalXacNhanDangXuat">
+                                <i class="fas fa-arrow-right-from-bracket me-2" style="width: 18px;"></i>Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-body">
+
+            <div id="flashArea"></div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="state-box">
+                <div class="spinner-border" role="status"></div>
+                <div class="state-msg">Đang tải thông tin giấy nghỉ phép...</div>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="state-box d-none">
+                <div class="state-icon"><i class="fas fa-circle-exclamation"></i></div>
+                <div class="state-msg" id="errorMsg">Không thể tải dữ liệu.</div>
+                <div class="mt-3">
+                    <a href="lichsu.html" class="btn-head btn-head-outline">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách
+                    </a>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div id="contentArea" class="d-none">
+
+                <div class="page-head">
+                    <div>
+                        <h4>Chi Tiết Giấy Nghỉ Phép: <span id="phMaDon">—</span></h4>
+                        <div class="sub">
+                            <i class="far fa-clock me-1"></i> Khởi tạo lúc: <span id="phCreatedAt">—</span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <a href="lichsu.html" class="btn-head btn-head-outline">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                        <a href="#" id="btnPrintA4" class="btn-head btn-head-primary" target="_blank">
+                            <i class="fas fa-print"></i> In Giấy A4
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-12 col-xl-8">
+                        <div class="card-modern">
+                            <div class="card-header">
+                                <h6><i class="fas fa-file-lines"></i> Nội Dung Giấy Nghỉ Phép</h6>
+                                <div id="statusBadgeWrap">—</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-row">
+                                    <div class="info-item">
+                                        <label>Cấp cho nhân viên:</label>
+                                        <div class="value primary big" id="iNhanVien">—</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Chức vụ & Khoa/Phòng:</label>
+                                        <div class="value" id="iChucVuKhoa">—</div>
+                                    </div>
+                                </div>
+
+                                <div class="info-row">
+                                    <div class="info-item">
+                                        <label>Từ ngày:</label>
+                                        <div class="value"><i class="far fa-calendar-alt text-primary me-1"></i><span id="iTuNgay">—</span></div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Đến ngày:</label>
+                                        <div class="value"><i class="far fa-calendar-alt text-primary me-1"></i><span id="iDenNgay">—</span></div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Tổng số ngày nghỉ:</label>
+                                        <div class="value primary big"><span id="iSoNgay">—</span> ngày</div>
+                                    </div>
+                                </div>
+
+                                <div class="info-row">
+                                    <div class="info-item" style="grid-column: 1 / -1;">
+                                        <label>Lý do nghỉ phép:</label>
+                                        <div class="reason-box" id="iLyDo">—</div>
+                                    </div>
+                                </div>
+
+                                <div class="info-row">
+                                    <div class="info-item">
+                                        <label>Chữ ký người nghỉ:</label>
+                                        <div class="sig-preview-box" id="iChuKyNguoiNghi">—</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Số ngày phép còn lại (sau khi duyệt):</label>
+                                        <div class="value success big"><span id="iPhepConLai">—</span> ngày</div>
+                                    </div>
+                                </div>
+
+                                <div class="info-row">
+                                    <div class="info-item">
+                                        <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #c2410c;">
+                                            <i class="fas fa-user-check me-1"></i>Ý kiến Trưởng Khoa/Phòng
+                                        </label>
+                                        <div id="iYKienTK">
+                                            <span class="text-muted small fst-italic">Chưa có ý kiến</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #1d4ed8;">
+                                            <i class="fas fa-signature me-1"></i>Phê duyệt Lãnh Đạo
+                                        </label>
+                                        <div id="iYKienLD">
+                                            <span class="text-muted small fst-italic">Chưa phê duyệt</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 p-3" style="background: #f0f7ff; border-radius: 12px; border: 1px solid #d8e9fc;">
+                                    <h6 class="fw-bold small text-uppercase mb-3" style="color: #1d4ed8;">
+                                        <i class="fas fa-folder-check me-1"></i> Tiếp Nhận Phòng Nhân Sự & Trừ Phép Năm
+                                    </h6>
+                                    <div id="iTiepNhanNS"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-4">
+                        <div class="card-modern">
+                            <div class="card-header">
+                                <h6><i class="fas fa-history"></i> Lịch Sử Luân Chuyển Đơn</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="timeline-list" id="timelineList">
+                                    <li class="text-muted small fst-italic">Chưa có lịch sử xử lý.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="card-modern">
+                            <div class="card-header">
+                                <h6><i class="fas fa-calendar-check text-success"></i> Hạn Mức Phép Năm <span id="quotaYear">—</span></h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="quota-row">
+                                    <span>Tổng số phép:</span>
+                                    <strong><span id="qTongPhep">0</span> ngày</strong>
+                                </div>
+                                <div class="quota-row">
+                                    <span>Đã nghỉ:</span>
+                                    <strong class="warning"><span id="qDaNghi">0</span> ngày</strong>
+                                </div>
+                                <div class="quota-row">
+                                    <span>Còn lại hiện tại:</span>
+                                    <strong class="success"><span id="qConLai">0</span> ngày</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL THÔNG TIN CÁ NHÂN + QUÊN MẬT KHẨU (ĐỒNG BỘ LICHSU)
+     ============================================================ -->
+<div class="modal fade modal-profile" id="modalThongTinTaiKhoan" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span class="title-icon"><i class="fas fa-user-circle"></i></span>
+                    Thông tin cá nhân
+                </h5>
+                <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="profile-tabs">
+                <button type="button" class="profile-tab active" data-tab="info">
+                    <i class="fas fa-id-card"></i> Thông tin cá nhân
+                </button>
+                <button type="button" class="profile-tab" data-tab="password">
+                    <i class="fas fa-unlock-keyhole"></i> Quên mật khẩu
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="tab-pane active" id="tab-info">
+                    <div class="profile-alert" id="alertInfo"></div>
+                    <form id="formUpdateInfo" autocomplete="off" novalidate>
+                        <input type="hidden" name="csrf_token" id="csrfTokenInfo" value="">
+                        <div class="form-row full">
+                            <div class="form-group-profile">
+                                <label>Họ và tên <span class="req">*</span></label>
+                                <input type="text" name="ho_ten" id="inp_hoten" placeholder="VD: NGUYỄN VĂN A" maxlength="100" required>
+                                <div class="field-error" id="err_hoten"><i class="fas fa-circle-exclamation"></i><span></span></div>
+                            </div>
+                        </div>
+                        <div class="form-row full">
+                            <div class="form-group-profile">
+                                <label>Email</label>
+                                <input type="email" name="email" id="inp_email" placeholder="example@tamtridongthap.vn" maxlength="100">
+                                <div class="field-error" id="err_email"><i class="fas fa-circle-exclamation"></i><span></span></div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group-profile">
+                                <label>Ngày sinh</label>
+                                <input type="date" name="ngay_sinh" id="inp_ngaysinh">
+                                <div class="field-error" id="err_ngaysinh"><i class="fas fa-circle-exclamation"></i><span></span></div>
+                            </div>
+                            <div class="form-group-profile">
+                                <label>Số điện thoại</label>
+                                <input type="tel" name="so_dien_thoai" id="inp_sdt" placeholder="09xxxxxxxx" maxlength="15">
+                                <div class="field-error" id="err_sdt"><i class="fas fa-circle-exclamation"></i><span></span></div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group-profile">
+                                <label>Mã nhân viên</label>
+                                <input type="text" id="inp_manv" disabled>
+                            </div>
+                            <div class="form-group-profile">
+                                <label>Khoa / Phòng ban</label>
+                                <input type="text" id="inp_khoa" disabled>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tab-pane" id="tab-password">
+                    <div class="profile-alert" id="alertPassword"></div>
+                    <div class="reset-info-banner">
+                        <i class="fas fa-circle-info"></i>
+                        <span>Đặt lại mật khẩu mới cho tài khoản <strong id="resetUsernameLabel">của bạn</strong></span>
+                    </div>
+                    <form id="formResetPassword" autocomplete="off" novalidate>
+                        <input type="hidden" name="csrf_token" id="csrfTokenPassword" value="">
+                        <div class="form-row full">
+                            <div class="form-group-profile">
+                                <label>Mật khẩu mới <span class="req">*</span></label>
+                                <input type="password" name="new_password" id="inp_newPw" placeholder="Nhập mật khẩu mới"
+                                       minlength="6" maxlength="255" required autocomplete="new-password">
+                                <div class="pw-rules" id="pwRules">
+                                    <div class="rule" data-rule="length"><i class="fas fa-circle"></i><span>Tối thiểu <strong>6 ký tự</strong></span></div>
+                                    <div class="rule" data-rule="upper"><i class="fas fa-circle"></i><span>Có ít nhất <strong>1 chữ in hoa</strong> (A-Z)</span></div>
+                                    <div class="rule" data-rule="lower"><i class="fas fa-circle"></i><span>Có ít nhất <strong>1 chữ thường</strong> (a-z)</span></div>
+                                    <div class="rule" data-rule="number"><i class="fas fa-circle"></i><span>Có ít nhất <strong>1 chữ số</strong> (0-9)</span></div>
+                                    <div class="rule" data-rule="special"><i class="fas fa-circle"></i><span>Có ít nhất <strong>1 ký tự đặc biệt</strong> (!@#$%...)</span></div>
+                                </div>
+                                <div class="field-error" id="err_newPw"><i class="fas fa-circle-exclamation"></i><span></span></div>
+                            </div>
+                        </div>
+                        <div class="form-row full">
+                            <div class="form-group-profile">
+                                <label>Xác nhận mật khẩu mới <span class="req">*</span></label>
+                                <input type="password" name="confirm_password" id="inp_confirmPw" placeholder="Nhập lại mật khẩu mới"
+                                       minlength="6" maxlength="255" required autocomplete="new-password">
+                                <div class="field-error" id="err_confirmPw"><i class="fas fa-circle-exclamation"></i><span></span></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn-save" id="btnSaveProfile">
+                    <i class="fas fa-floppy-disk"></i>
+                    <span id="btnSaveLabel">Lưu thay đổi</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LOGOUT -->
+<div class="modal fade" id="modalXacNhanDangXuat" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-center p-3">
+            <div class="modal-body p-3">
+                <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width:55px;height:55px;">
+                    <i class="fas fa-arrow-right-from-bracket fs-4"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-2">Xác Nhận Đăng Xuất</h6>
+                <p class="text-muted small mb-0">Bạn có chắc muốn đăng xuất khỏi tài khoản này không?</p>
+            </div>
+            <div class="d-flex justify-content-center gap-2 pt-2 border-top">
+                <button type="button" class="btn btn-light rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Hủy</button>
+                <a href="../../backend/api/dangnhap.php?action=logout" class="btn btn-danger rounded-pill px-4 btn-sm fw-semibold">
+                    <i class="fas fa-arrow-right-from-bracket me-1"></i> Đăng xuất
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ============================================================
+   CẤU HÌNH API
+   ============================================================ */
+const API = {
+    base: '../../backend/api',
+    xemdon: '../../backend/api/xemdon.php',
+    trangchu: '../../backend/api/trangchu.php',
+    csrf: '../../backend/api/csrf.php',
+    updateInfo: '../../backend/api/capnhattk.php',
+    resetPw: '../../backend/api/datlaimatkhau.php',
+    loginPage: '../dangnhap_quenmk/dangnhap.html'
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STATE = {
+    user: null,
+    csrfToken: ''
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function e(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function formatDate(s) {
+    if (!s || s === '0000-00-00') return '-';
+    const d = new Date(s.replace(' ', 'T'));
+    if (isNaN(d)) return '-';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+function formatDateTime(s) {
+    if (!s || s === '0000-00-00 00:00:00') return '-';
+    if (typeof s === 'string' && /^\d{2}\/\d{2}\/\d{4}/.test(s)) return s;
+    const d = new Date(s.replace(' ', 'T'));
+    if (isNaN(d)) return '-';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}/${mm}/${d.getFullYear()} ${hh}:${mi}`;
+}
+
+const STATUS_MAP = {
+    draft:           '<span class="badge bg-secondary"><i class="fas fa-pencil-alt me-1"></i>Bản nháp</span>',
+    cho_truong_khoa: '<span class="badge bg-warning text-dark"><i class="fas fa-user-clock me-1"></i>Chờ trưởng khoa</span>',
+    cho_phe_duyet:   '<span class="badge bg-info text-dark"><i class="fas fa-hourglass-half me-1"></i>Chờ phê duyệt</span>',
+    da_duyet:        '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Đã duyệt</span>',
+    tu_choi:         '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Từ chối</span>',
+    da_tiep_nhan:    '<span class="badge bg-primary"><i class="fas fa-folder-check me-1"></i>Đã tiếp nhận</span>'
+};
+
+const ROLE_LABEL = {
+    admin:        'Quản trị hệ thống',
+    nhan_vien:    'Nhân viên',
+    truong_khoa:  'Trưởng khoa / Phòng',
+    lanh_dao:     'Ban Giám Đốc / Lãnh đạo',
+    nhan_su:      'Phòng Nhân sự',
+    giam_doc:     'Ban Giám Đốc',
+    ban_lanh_dao: 'Ban Giám Đốc'
+};
+
+function getStatusBadge(status) {
+    return STATUS_MAP[status] || `<span class="badge bg-secondary">${e(status)}</span>`;
+}
+
+function getRoleLabel(role) {
+    return ROLE_LABEL[role] || 'Người dùng';
+}
+
+function showError(msg) {
+    document.getElementById('loadingState').classList.add('d-none');
+    document.getElementById('contentArea').classList.add('d-none');
+    const err = document.getElementById('errorState');
+    err.classList.remove('d-none');
+    document.getElementById('errorMsg').textContent = msg;
+}
+
+function buildUrl(base, params = {}) {
+    const url = new URL(base, window.location.href);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    return url.toString();
+}
+
+function unwrapPayload(json) {
+    if (!json || typeof json !== 'object') return {};
+    if (json.data && typeof json.data === 'object' && !Array.isArray(json.data)) {
+        return json.data;
+    }
+    return json;
+}
+
+/* ============================================================
+   CSRF TOKEN
+   ============================================================ */
+async function loadCsrfToken() {
+    try {
+        const res = await fetch(API.csrf, {
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (!res.ok) return '';
+        const data = await res.json();
+        const payload = unwrapPayload(data);
+        if (payload.csrf_token) {
+            STATE.csrfToken = payload.csrf_token;
+            const a = document.getElementById('csrfTokenInfo');
+            const b = document.getElementById('csrfTokenPassword');
+            if (a) a.value = payload.csrf_token;
+            if (b) b.value = payload.csrf_token;
+        }
+    } catch (e) { console.warn('[CSRF]', e); }
+    return '';
+}
+
+/* ============================================================
+   SIDEBAR TOGGLE
+   ============================================================ */
+(function () {
+    const sidebar = document.getElementById('appSidebar');
+    const overlay = document.getElementById('sbOverlay');
+    const btn     = document.getElementById('sidebarToggle');
+    if (!sidebar || !overlay || !btn) return;
+
+    const openS  = () => { sidebar.classList.add('open');  overlay.classList.add('show'); };
+    const closeS = () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); };
+
+    btn.addEventListener('click', (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        sidebar.classList.contains('open') ? closeS() : openS();
+    });
+    overlay.addEventListener('click', closeS);
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeS(); });
+})();
+
+/* ============================================================
+   RENDER USER INFO
+   ============================================================ */
+function renderUserInfo(user) {
+    if (!user) return;
+    STATE.user = user;
+
+    const hoTen  = user.ho_ten || user.username || 'Người dùng';
+    const role   = getRoleLabel(user.vai_tro);
+    const khoa   = user.ten_khoa || '';
+
+    document.getElementById('sbUserName').textContent = hoTen;
+    document.getElementById('sbUserRole').textContent = role + (khoa ? ' · ' + khoa : '');
+
+    document.getElementById('navUserName').textContent = hoTen;
+    document.getElementById('navUserRole').textContent = role;
+
+    document.getElementById('ddUserName').textContent = hoTen;
+    document.getElementById('ddUserRole').textContent = role;
+    document.getElementById('ddUserDept').textContent = khoa || 'Bộ phận chưa cập nhật';
+}
+
+/* ============================================================
+   FILL FORM PROFILE FROM STATE
+   ============================================================ */
+function fillUserInfo() {
+    const u = STATE.user || {};
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+
+    setVal('inp_hoten',    u.ho_ten ? String(u.ho_ten).toUpperCase() : '');
+    setVal('inp_email',    u.email);
+    setVal('inp_ngaysinh', u.ngay_sinh);
+    setVal('inp_sdt',      u.so_dien_thoai);
+    setVal('inp_manv',     u.ma_nv || '---');
+    setVal('inp_khoa',     u.ten_khoa || '---');
+}
+
+/* ============================================================
+   NOTIFICATIONS
+   ============================================================ */
+function getNotifIcon(title) {
+    const t = String(title || '').toLowerCase();
+    if (t.includes('tiếp nhận'))       return { bg: '#ecfeff', color: '#06b6d4', icon: 'fa-inbox' };
+    if (t.includes('phê duyệt') || t.includes('đã duyệt')) return { bg: '#ecfdf5', color: '#10b981', icon: 'fa-check-circle' };
+    if (t.includes('từ chối'))         return { bg: '#fef2f2', color: '#ef4444', icon: 'fa-times-circle' };
+    if (t.includes('ý kiến'))          return { bg: '#fffbeb', color: '#f59e0b', icon: 'fa-comment-dots' };
+    return { bg: '#eff6ff', color: '#3b82f6', icon: 'fa-info-circle' };
+}
+
+function renderNotifItem(n) {
+    const ic = getNotifIcon(n.tieu_de);
+    let href = '#';
+    if (n.link) {
+        if (/^https?:\/\//i.test(n.link)) href = n.link;
+        else href = '../../' + n.link.replace(/^\//, '');
+    }
+    return `
+        <a href="${e(href)}" class="notif-item unread">
+            <div class="notif-icon" style="background: ${ic.bg}; color: ${ic.color};">
+                <i class="fas ${ic.icon}"></i>
+            </div>
+            <div class="notif-body">
+                <div class="notif-title-row">
+                    <div class="notif-title">${e(n.tieu_de)}</div>
+                    <span class="notif-dot"></span>
+                </div>
+                <div class="notif-content">${e(n.noi_dung)}</div>
+                <div class="notif-time">
+                    <i class="far fa-clock"></i><span>${e(n.created_at || '')}</span>
+                </div>
+            </div>
+        </a>`;
+}
+
+async function loadNotifications() {
+    const container  = document.getElementById('notifScrollContainer');
+    const badgeCount = document.getElementById('notifBadgeCount');
+    const unreadText = document.getElementById('notifUnreadText');
+    const markAllBtn = document.getElementById('notifMarkAllBtn');
+    if (!container) return;
+
+    try {
+        const res = await fetch(`${API.trangchu}?action=notifications`, {
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (!res.ok) {
+            container.innerHTML = `
+                <div class="notif-empty-state">
+                    <i class="fas fa-bell-slash empty-icon"></i>
+                    <div class="empty-title">Không tải được thông báo</div>
+                </div>`;
+            return;
+        }
+
+        const json = await res.json();
+        if (!json.success) throw new Error('Không tải được thông báo');
+
+        const payload = unwrapPayload(json);
+        const unreadCount = Number(payload.unread_count || 0);
+        const list = (payload.notifications || []).filter(n => Number(n.da_doc) === 0);
+
+        if (unreadCount > 0) {
+            badgeCount.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            badgeCount.classList.remove('d-none');
+            unreadText.textContent = unreadCount + ' mới';
+            unreadText.classList.remove('d-none');
+            markAllBtn.classList.remove('d-none');
+        } else {
+            badgeCount.classList.add('d-none');
+            unreadText.classList.add('d-none');
+            markAllBtn.classList.add('d-none');
+        }
+
+        if (list.length === 0) {
+            container.innerHTML = `
+                <div class="notif-empty-state">
+                    <i class="fas fa-bell-slash empty-icon"></i>
+                    <div class="empty-title">Không có thông báo chưa đọc</div>
+                    <div class="empty-desc">Các thông báo mới về đơn nghỉ phép sẽ hiển thị tại đây.</div>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = list.map(renderNotifItem).join('');
+    } catch (err) {
+        console.warn('[Notif]', err);
+        container.innerHTML = `
+            <div class="notif-empty-state">
+                <i class="fas fa-bell-slash empty-icon"></i>
+                <div class="empty-title">Không tải được thông báo</div>
+            </div>`;
+    }
+}
+
+function initNotifActions() {
+    document.body.addEventListener('click', async function (ev) {
+        const btn = ev.target.closest('.btn-mark-all-read-ajax');
+        if (!btn) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        try {
+            const res = await fetch(`${API.trangchu}?action=mark_all_read`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const json = await res.json();
+            if (json.success) {
+                document.getElementById('notifBadgeCount')?.classList.add('d-none');
+                document.getElementById('notifUnreadText')?.classList.add('d-none');
+                document.getElementById('notifMarkAllBtn')?.classList.add('d-none');
+                const container = document.getElementById('notifScrollContainer');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="notif-empty-state">
+                            <i class="fas fa-bell-slash empty-icon"></i>
+                            <div class="empty-title">Không có thông báo chưa đọc</div>
+                            <div class="empty-desc">Các thông báo mới về đơn nghỉ phép sẽ hiển thị tại đây.</div>
+                        </div>`;
+                }
+            }
+        } catch (err) { console.error('[Notif]', err); }
+    });
+}
+
+/* ============================================================
+   LOAD LEAVE DETAIL
+   ============================================================ */
+function getLeaveIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return parseInt(params.get('id') || '0', 10);
+}
+
+function renderSignature(container, path, alt) {
+    if (!path) {
+        container.innerHTML = '<span class="text-muted small fst-italic">Ký tên trực tiếp trên giấy in</span>';
+        return;
+    }
+    const src = path.startsWith('data:image') ? path : '../../' + path.replace(/^\//, '');
+    container.innerHTML = `<img src="${e(src)}" alt="${e(alt)}">`;
+}
+
+function renderLeaveDetail(payload) {
+    const lv = payload.leave;
+    const hist = payload.history || [];
+    const quota = payload.quota || {};
+    const year = payload.leave_year || new Date().getFullYear();
+
+    if (!lv) {
+        showError('Response thiếu dữ liệu đơn nghỉ phép.');
+        return;
+    }
+
+    document.title = `Chi Tiết Giấy Nghỉ Phép ${lv.ma_don || ''} - Hệ Thống Quản Lý Giấy Nghỉ Phép`;
+    document.getElementById('phMaDon').textContent = lv.ma_don || '—';
+    document.getElementById('phCreatedAt').textContent = formatDateTime(lv.created_at);
+    document.getElementById('btnPrintA4').href = `in.html?id=${lv.id}`;
+
+    document.getElementById('statusBadgeWrap').innerHTML = getStatusBadge(lv.trang_thai);
+
+    document.getElementById('iNhanVien').textContent = `${lv.ho_ten || ''} (${lv.ma_nv || ''})`;
+    document.getElementById('iChucVuKhoa').textContent = `${lv.chuc_vu || ''} — ${lv.ten_khoa || ''}`;
+    document.getElementById('iTuNgay').textContent = formatDate(lv.tu_ngay);
+    document.getElementById('iDenNgay').textContent = formatDate(lv.den_ngay);
+    document.getElementById('iSoNgay').textContent = lv.so_ngay;
+    document.getElementById('iLyDo').innerHTML = e(lv.ly_do).replace(/\n/g, '<br>');
+
+    renderSignature(document.getElementById('iChuKyNguoiNghi'), lv.chu_ky_nguoi_nghi, 'Chữ ký người nghỉ');
+
+    const conLai = (lv.so_phep_con_lai_luc_nghi !== null && lv.so_phep_con_lai_luc_nghi !== undefined)
+        ? lv.so_phep_con_lai_luc_nghi
+        : (quota.phep_con_lai ?? '—');
+    document.getElementById('iPhepConLai').textContent = conLai;
+
+    const tk = document.getElementById('iYKienTK');
+    if (lv.y_kien_truong_khoa) {
+        let html = `<div class="reason-box mb-2">${e(lv.y_kien_truong_khoa).replace(/\n/g, '<br>')}</div>`;
+        if (lv.chu_ky_truong_khoa) {
+            const src = lv.chu_ky_truong_khoa.startsWith('data:image')
+                ? lv.chu_ky_truong_khoa
+                : '../../' + lv.chu_ky_truong_khoa.replace(/^\//, '');
+            html += `<div class="sig-preview-box mb-2"><img src="${e(src)}" alt="Chữ ký Trưởng khoa"></div>`;
+        }
+        html += `<div class="text-muted small">Ngày cho ý kiến: ${formatDateTime(lv.ngay_cho_y_kien)}</div>`;
+        tk.innerHTML = html;
+    } else {
+        tk.innerHTML = '<span class="text-muted small fst-italic">Chưa có ý kiến</span>';
+    }
+
+    const ld = document.getElementById('iYKienLD');
+    if (lv.phe_duyet) {
+        let html = `<div class="reason-box mb-2">${e(lv.phe_duyet).replace(/\n/g, '<br>')}</div>`;
+        if (lv.chu_ky_lanh_dao) {
+            const src = lv.chu_ky_lanh_dao.startsWith('data:image')
+                ? lv.chu_ky_lanh_dao
+                : '../../' + lv.chu_ky_lanh_dao.replace(/^\//, '');
+            html += `<div class="sig-preview-box mb-2"><img src="${e(src)}" alt="Chữ ký Lãnh đạo"></div>`;
+        }
+        html += `<div class="text-muted small">Ngày phê duyệt: ${formatDateTime(lv.ngay_phe_duyet)}</div>`;
+        ld.innerHTML = html;
+    } else {
+        ld.innerHTML = '<span class="text-muted small fst-italic">Chưa phê duyệt</span>';
+    }
+
+    const ns = document.getElementById('iTiepNhanNS');
+    if (lv.ngay_nop_nhan_su || lv.ngay_tiep_nhan) {
+        ns.innerHTML = `
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="p-2 bg-white rounded border">
+                        <span class="text-muted small d-block">Ngày nộp giấy <em>(P. Nhân sự ghi)</em>:</span>
+                        <strong class="text-dark fs-6">
+                            <i class="far fa-calendar-check text-success me-1"></i>
+                            ${formatDate(lv.ngay_nop_nhan_su || lv.created_at)}
+                        </strong>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-2 bg-white rounded border">
+                        <span class="text-muted small d-block">Thời gian tiếp nhận hệ thống:</span>
+                        <strong class="text-dark">
+                            <i class="far fa-clock text-primary me-1"></i>
+                            ${lv.ngay_tiep_nhan ? formatDateTime(lv.ngay_tiep_nhan) : 'Đang xử lý'}
+                        </strong>
+                        ${(lv.nhan_su_ten || lv.nhan_su_user) ? `<div class="text-muted small mt-1">Cán bộ tiếp nhận: <strong>${e(lv.nhan_su_ten || lv.nhan_su_user)}</strong></div>` : ''}
+                    </div>
+                </div>
+            </div>`;
+    } else {
+        ns.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="text-muted small fst-italic">
+                    <i class="fas fa-hourglass-half text-warning me-1"></i> Chưa ghi nhận tiếp nhận vào sổ lưu trữ Phòng Nhân sự
+                </span>
+                <span class="text-muted small">
+                    <i class="far fa-paper-plane me-1"></i> Ngày gửi đơn: <strong>${formatDate(lv.created_at)}</strong>
+                </span>
+            </div>`;
+    }
+
+    const tl = document.getElementById('timelineList');
+    if (hist.length === 0) {
+        tl.innerHTML = '<li class="text-muted small fst-italic">Chưa có lịch sử xử lý.</li>';
+    } else {
+        tl.innerHTML = hist.map(h => {
+            let cls = '';
+            if (h.trang_thai_moi === 'da_duyet' || h.trang_thai_moi === 'da_tiep_nhan') cls = 'approved';
+            else if (h.trang_thai_moi === 'tu_choi') cls = 'rejected';
+
+            return `<li class="timeline-item ${cls}">
+                <div class="fw-bold small text-dark">${e(h.thao_tac)}</div>
+                <div class="text-muted small">Thực hiện: <strong>${e(h.nguoi_thuc_hien_ten || h.username || '—')}</strong></div>
+                <div class="text-muted" style="font-size: 0.75rem;">
+                    <i class="far fa-clock me-1"></i> ${formatDateTime(h.created_at)}
+                </div>
+                ${h.ghi_chu ? `<div class="mt-2 p-2 bg-white rounded small text-secondary border">${e(h.ghi_chu)}</div>` : ''}
+            </li>`;
+        }).join('');
+    }
+
+    document.getElementById('quotaYear').textContent = year;
+    document.getElementById('qTongPhep').textContent = quota.tong_phep ?? 0;
+    document.getElementById('qDaNghi').textContent  = quota.so_ngay_da_nghi ?? 0;
+    document.getElementById('qConLai').textContent  = quota.phep_con_lai ?? 0;
+}
+
+/* ============================================================
+   VALIDATION HELPERS
+   ============================================================ */
+function validateHoTen(name) {
+    const val = String(name || '').trim();
+    if (val === '')        return { ok: false, msg: 'Họ và tên không được để trống.' };
+    if (val.length < 2)    return { ok: false, msg: 'Họ và tên phải có ít nhất 2 ký tự.' };
+    if (val.length > 100)  return { ok: false, msg: 'Họ và tên quá dài (tối đa 100 ký tự).' };
+    if (!/^[\p{L}\s]+$/u.test(val)) {
+        return { ok: false, msg: 'Họ và tên chỉ được chứa chữ cái và khoảng trắng.' };
+    }
+    return { ok: true };
+}
+function validateEmail(email) {
+    const val = String(email || '').trim();
+    if (val === '') return { ok: true };
+    if (val.length > 100) return { ok: false, msg: 'Email quá dài.' };
+    const re = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+    if (!re.test(val)) return { ok: false, msg: 'Email không đúng định dạng.' };
+    return { ok: true };
+}
+function validatePhone(phone) {
+    const val = String(phone || '').trim();
+    if (val === '') return { ok: true };
+    const clean = val.replace(/[\s\.\-]/g, '');
+    const re = /^(0|\+84)(3|5|7|8|9)[0-9]{8}$/;
+    if (!re.test(clean)) return { ok: false, msg: 'SĐT không hợp lệ (10 số, đầu 03/05/07/08/09).' };
+    return { ok: true };
+}
+function validateNgaySinh(dateStr) {
+    const val = String(dateStr || '').trim();
+    if (val === '') return { ok: true };
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return { ok: false, msg: 'Ngày sinh không đúng định dạng.' };
+    const today = new Date();
+    if (d > today) return { ok: false, msg: 'Ngày sinh không thể ở tương lai.' };
+    let age = today.getFullYear() - d.getFullYear();
+    const m = today.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+    if (age < 23) return { ok: false, msg: `Tuổi phải từ 23 trở lên (hiện tại: ${age} tuổi).` };
+    if (age > 65) return { ok: false, msg: `Tuổi không được vượt quá 65 (hiện tại: ${age} tuổi).` };
+    return { ok: true };
+}
+function checkPasswordStrength(pw) {
+    return {
+        length:  pw.length >= 6,
+        upper:   /[A-Z]/.test(pw),
+        lower:   /[a-z]/.test(pw),
+        number:  /[0-9]/.test(pw),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pw)
+    };
+}
+function getPasswordError(pw) {
+    if (!pw || pw.length === 0) return 'Vui lòng nhập mật khẩu mới.';
+    if (pw.length < 6)          return 'Mật khẩu phải có ít nhất 6 ký tự.';
+    if (!/[A-Z]/.test(pw))      return 'Mật khẩu phải có ít nhất 1 chữ in hoa (A-Z).';
+    if (!/[a-z]/.test(pw))      return 'Mật khẩu phải có ít nhất 1 chữ thường (a-z).';
+    if (!/[0-9]/.test(pw))      return 'Mật khẩu phải có ít nhất 1 chữ số (0-9).';
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pw)) {
+        return 'Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%^&*...).';
+    }
+    return '';
+}
+function setFieldError(fieldId, errorId, message) {
+    const input = document.getElementById(fieldId);
+    const errEl = document.getElementById(errorId);
+    if (!input || !errEl) return;
+    if (message) {
+        input.classList.add('is-invalid');
+        errEl.querySelector('span').textContent = message;
+        errEl.classList.add('show');
+    } else {
+        input.classList.remove('is-invalid');
+        errEl.querySelector('span').textContent = '';
+        errEl.classList.remove('show');
+    }
+}
+function clearAllFieldErrors() {
+    ['inp_hoten', 'inp_email', 'inp_ngaysinh', 'inp_sdt', 'inp_newPw', 'inp_confirmPw'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.classList.remove('is-invalid');
+    });
+    ['err_hoten', 'err_email', 'err_ngaysinh', 'err_sdt', 'err_newPw', 'err_confirmPw'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('show');
+    });
+}
+
+/* ============================================================
+   MODAL PROFILE (ĐỒNG BỘ LICHSU)
+   ============================================================ */
+(function () {
+    const modal = document.getElementById('modalThongTinTaiKhoan');
+    if (!modal) return;
+
+    const tabs     = modal.querySelectorAll('.profile-tab');
+    const panes    = modal.querySelectorAll('.tab-pane');
+    const btnSave  = modal.querySelector('#btnSaveProfile');
+    const btnLabel = modal.querySelector('#btnSaveLabel');
+    let currentTab = 'info';
+
+    function switchTab(target) {
+        currentTab = target;
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+        panes.forEach(p => p.classList.toggle('active', p.id === 'tab-' + target));
+        btnLabel.textContent = (target === 'password') ? 'Đặt lại mật khẩu' : 'Lưu thay đổi';
+
+        if (target === 'password') {
+            const label = document.getElementById('resetUsernameLabel');
+            if (label) {
+                const u = STATE.user || {};
+                label.textContent = u.ma_nv ? `"${u.ma_nv}"` : (u.username ? `"${u.username}"` : 'của bạn');
+            }
+        }
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+    modal.addEventListener('show.bs.modal', async function (event) {
+        const trigger = event.relatedTarget;
+        const tab = (trigger && trigger.dataset.openTab) ? trigger.dataset.openTab : 'info';
+        switchTab(tab);
+
+        modal.querySelector('#alertInfo')?.classList.remove('show');
+        modal.querySelector('#alertPassword')?.classList.remove('show');
+        clearAllFieldErrors();
+
+        if (!STATE.csrfToken) await loadCsrfToken();
+        else {
+            const a = document.getElementById('csrfTokenInfo');
+            const b = document.getElementById('csrfTokenPassword');
+            if (a) a.value = STATE.csrfToken;
+            if (b) b.value = STATE.csrfToken;
+        }
+
+        fillUserInfo();
+        updatePwRules('');
+    });
+
+    btnSave?.addEventListener('click', async () => {
+        if (currentTab === 'password') await submitResetPassword(modal);
+        else await submitUpdateInfo(modal);
+    });
+})();
+
+function showModalAlert(id, type, message) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('success', 'error');
+    el.classList.add('show', type);
+    el.textContent = message;
+}
+
+/* ============================================================
+   AUTO UPPERCASE HỌ TÊN
+   ============================================================ */
+document.getElementById('inp_hoten')?.addEventListener('blur', function () {
+    this.value = this.value.trim().replace(/\s+/g, ' ');
+    if (this.value) this.value = this.value.toLocaleUpperCase('vi-VN');
+    const r = validateHoTen(this.value);
+    setFieldError('inp_hoten', 'err_hoten', r.ok ? '' : r.msg);
+});
+document.getElementById('inp_email')?.addEventListener('blur', function () {
+    const r = validateEmail(this.value);
+    setFieldError('inp_email', 'err_email', r.ok ? '' : r.msg);
+});
+document.getElementById('inp_sdt')?.addEventListener('blur', function () {
+    const r = validatePhone(this.value);
+    setFieldError('inp_sdt', 'err_sdt', r.ok ? '' : r.msg);
+});
+document.getElementById('inp_ngaysinh')?.addEventListener('blur', function () {
+    const r = validateNgaySinh(this.value);
+    setFieldError('inp_ngaysinh', 'err_ngaysinh', r.ok ? '' : r.msg);
+});
+
+/* ============================================================
+   PASSWORD RULES LIVE UPDATE
+   ============================================================ */
+function updatePwRules(pw) {
+    const checks = checkPasswordStrength(pw);
+    document.querySelectorAll('#pwRules .rule').forEach(rule => {
+        const key = rule.dataset.rule;
+        const icon = rule.querySelector('i');
+        if (checks[key]) {
+            rule.classList.add('ok');
+            icon.classList.remove('fa-circle');
+            icon.classList.add('fa-check-circle');
+        } else {
+            rule.classList.remove('ok');
+            icon.classList.remove('fa-check-circle');
+            icon.classList.add('fa-circle');
+        }
+    });
+    return Object.values(checks).every(Boolean);
+}
+document.getElementById('inp_newPw')?.addEventListener('input', function () {
+    updatePwRules(this.value);
+    if (this.value) setFieldError('inp_newPw', 'err_newPw', '');
+});
+document.getElementById('inp_confirmPw')?.addEventListener('input', function () {
+    const newPw = document.getElementById('inp_newPw').value;
+    if (this.value && this.value === newPw) setFieldError('inp_confirmPw', 'err_confirmPw', '');
+});
+
+/* ============================================================
+   SUBMIT: CẬP NHẬT THÔNG TIN CÁ NHÂN
+   ============================================================ */
+async function submitUpdateInfo(modal) {
+    const btn = modal.querySelector('#btnSaveProfile');
+    clearAllFieldErrors();
+
+    let hotenVal = document.getElementById('inp_hoten').value.trim();
+    hotenVal = hotenVal.replace(/\s+/g, ' ').toLocaleUpperCase('vi-VN');
+    document.getElementById('inp_hoten').value = hotenVal;
+
+    const emailVal = document.getElementById('inp_email').value.trim();
+    const sdtVal   = document.getElementById('inp_sdt').value.trim();
+    const nsVal    = document.getElementById('inp_ngaysinh').value.trim();
+
+    let hasError = false, firstErrFieldId = null;
+    const r1 = validateHoTen(hotenVal);
+    if (!r1.ok) { setFieldError('inp_hoten', 'err_hoten', r1.msg); hasError = true; firstErrFieldId = firstErrFieldId || 'inp_hoten'; }
+    const r2 = validateEmail(emailVal);
+    if (!r2.ok) { setFieldError('inp_email', 'err_email', r2.msg); hasError = true; firstErrFieldId = firstErrFieldId || 'inp_email'; }
+    const r3 = validatePhone(sdtVal);
+    if (!r3.ok) { setFieldError('inp_sdt', 'err_sdt', r3.msg); hasError = true; firstErrFieldId = firstErrFieldId || 'inp_sdt'; }
+    const r4 = validateNgaySinh(nsVal);
+    if (!r4.ok) { setFieldError('inp_ngaysinh', 'err_ngaysinh', r4.msg); hasError = true; firstErrFieldId = firstErrFieldId || 'inp_ngaysinh'; }
+
+    if (hasError) {
+        document.getElementById(firstErrFieldId)?.focus();
+        showModalAlert('alertInfo', 'error', 'Vui lòng kiểm tra lại các trường báo đỏ.');
+        return;
+    }
+
+    const form = document.getElementById('formUpdateInfo');
+    const fd = new FormData(form);
+
+    btn.disabled = true;
+    const ic = btn.querySelector('i'); const oldIcon = ic ? ic.className : '';
+    if (ic) ic.className = 'fas fa-spinner fa-spin';
+
+    try {
+        const res = await fetch(API.updateInfo, {
+            method: 'POST', body: fd, credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showModalAlert('alertInfo', 'success', data.message || 'Cập nhật thành công!');
+            if (!STATE.user) STATE.user = {};
+            STATE.user.ho_ten        = hotenVal;
+            STATE.user.email         = emailVal;
+            STATE.user.ngay_sinh     = nsVal;
+            STATE.user.so_dien_thoai = sdtVal;
+            renderUserInfo(STATE.user);
+            fillUserInfo();
+        } else {
+            showModalAlert('alertInfo', 'error', data.message || 'Cập nhật thất bại!');
+        }
+    } catch (e) {
+        showModalAlert('alertInfo', 'error', 'Lỗi kết nối: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        if (ic) ic.className = oldIcon || 'fas fa-floppy-disk';
+    }
+}
+
+/* ============================================================
+   SUBMIT: ĐẶT LẠI MẬT KHẨU
+   ============================================================ */
+async function submitResetPassword(modal) {
+    const btn = modal.querySelector('#btnSaveProfile');
+    clearAllFieldErrors();
+
+    const newPw     = document.getElementById('inp_newPw').value;
+    const confirmPw = document.getElementById('inp_confirmPw').value;
+
+    let hasError = false, firstErrFieldId = null;
+
+    const pwErr = getPasswordError(newPw);
+    if (pwErr) { setFieldError('inp_newPw', 'err_newPw', pwErr); hasError = true; firstErrFieldId = firstErrFieldId || 'inp_newPw'; }
+
+    if (!confirmPw) {
+        setFieldError('inp_confirmPw', 'err_confirmPw', 'Vui lòng nhập lại mật khẩu.');
+        hasError = true; firstErrFieldId = firstErrFieldId || 'inp_confirmPw';
+    } else if (newPw !== confirmPw) {
+        setFieldError('inp_confirmPw', 'err_confirmPw', 'Mật khẩu xác nhận không khớp!');
+        hasError = true; firstErrFieldId = firstErrFieldId || 'inp_confirmPw';
+    }
+
+    if (hasError) {
+        document.getElementById(firstErrFieldId)?.focus();
+        showModalAlert('alertPassword', 'error', 'Vui lòng kiểm tra lại mật khẩu.');
+        return;
+    }
+
+    btn.disabled = true;
+    const ic = btn.querySelector('i'); const oldIcon = ic ? ic.className : '';
+    if (ic) ic.className = 'fas fa-spinner fa-spin';
+
+    try {
+        const res = await fetch(API.resetPw, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                new_password: newPw,
+                confirm_password: confirmPw,
+                csrf_token: STATE.csrfToken
+            })
+        });
+
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) {
+            const raw = await res.text();
+            console.error('[ResetPW] Backend trả về không phải JSON:', raw.substring(0, 300));
+            throw new Error('Backend trả về dữ liệu không hợp lệ.');
+        }
+
+        const data = await res.json();
+        if (data.success) {
+            showModalAlert('alertPassword', 'success', data.message || 'Đặt lại mật khẩu thành công!');
+            document.getElementById('formResetPassword').reset();
+            updatePwRules('');
+        } else {
+            showModalAlert('alertPassword', 'error', data.message || 'Đặt lại mật khẩu thất bại!');
+        }
+    } catch (e) {
+        showModalAlert('alertPassword', 'error', 'Lỗi kết nối: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        if (ic) ic.className = oldIcon || 'fas fa-floppy-disk';
+    }
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(async function init() {
+    try {
+        initNotifActions();
+        await loadCsrfToken();
+
+        const leaveId = getLeaveIdFromUrl();
+        if (!leaveId || leaveId <= 0) {
+            showError('Mã giấy nghỉ phép không hợp lệ! URL phải có dạng: xemdon.html?id=5');
+            return;
+        }
+
+        const url = buildUrl(API.xemdon, { id: leaveId });
+        const res = await fetch(url, { credentials: 'include' });
+
+        if (res.status === 401) {
+            window.location.href = API.loginPage;
+            return;
+        }
+
+        const rawText = await res.text();
+        if (!rawText) {
+            showError('Backend trả response rỗng.');
+            return;
+        }
+
+        let json;
+        try {
+            json = JSON.parse(rawText);
+        } catch (parseErr) {
+            showError('Backend KHÔNG trả JSON. Response: ' + rawText.substring(0, 200));
+            return;
+        }
+
+        if (!json.success) {
+            showError('Backend báo lỗi: ' + (json.message || json.error || 'Unknown'));
+            return;
+        }
+
+        const payload = unwrapPayload(json);
+        console.log('[DEBUG] Payload keys:', Object.keys(payload));
+
+        if (payload.user) {
+            renderUserInfo(payload.user);
+        }
+
+        renderLeaveDetail(payload);
+        loadNotifications();
+
+        document.getElementById('loadingState').classList.add('d-none');
+        document.getElementById('contentArea').classList.remove('d-none');
+
+    } catch (err) {
+        console.error('[DEBUG] Exception:', err);
+        showError('Có lỗi xảy ra: ' + err.message);
+    }
+})();
+</script>
+
+</body>
+</html>

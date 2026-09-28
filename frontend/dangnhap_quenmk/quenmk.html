@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quên Mật Khẩu - Bệnh Viện Tâm Trí Đồng Tháp</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #0369a1;
+            --primary-gradient: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar { display: none; }
+
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear,
+        input[type="password"]::-webkit-contacts-auto-fill-button,
+        input[type="password"]::-webkit-credentials-auto-fill-button {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        .register-wrapper {
+            height: 100vh;
+            width: 100vw;
+            /* Ảnh nền: từ /frontend/dangnhap_quenmk/ lên /frontend/uploads/img/ */
+            background: linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.55)),
+                        url('../uploads/img/hinhnen.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 460px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            padding: 18px 20px;
+        }
+
+        .hospital-header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .hospital-icon {
+            width: 40px;
+            height: 40px;
+            background: #e0f2fe;
+            color: var(--primary-color);
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .hospital-header h4 {
+            font-size: 1.1rem;
+            letter-spacing: -0.3px;
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 1px;
+        }
+
+        .form-control {
+            border-radius: 5px;
+            padding: 0.32rem 0.55rem;
+            border: 1.2px solid #cbd5e1;
+            font-size: 0.82rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+        }
+
+        .btn-hospital {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 5px;
+            padding: 0.45rem;
+            border: none;
+            transition: all 0.25s ease;
+        }
+
+        .btn-hospital:hover {
+            opacity: 0.95;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-hospital:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .btn-toggle-pw {
+            cursor: pointer;
+            border: 1.2px solid #cbd5e1;
+            border-left: none;
+            background: #f8fafc;
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+            padding-left: 8px;
+            padding-right: 8px;
+            color: #64748b;
+            font-size: 0.75rem;
+        }
+
+        #response-alert {
+            display: none;
+            font-size: 0.78rem;
+            padding: 6px 10px;
+        }
+
+        /* Modal đổi mật khẩu */
+        .modal-pw .modal-content {
+            border: none;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+        }
+        .modal-pw .modal-header {
+            background: var(--primary-gradient);
+            color: #fff;
+            padding: 14px 20px;
+            border-bottom: none;
+        }
+        .modal-pw .modal-title {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #fff;
+        }
+        .modal-pw .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.85;
+        }
+        .modal-pw .btn-close:hover { opacity: 1; }
+        .modal-pw .modal-body { padding: 20px 22px; }
+
+        .user-info-box {
+            background: #f0f7ff;
+            border: 1px solid #c9e0f9;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: 0.8rem;
+        }
+        .user-info-box .lbl { color: #64748b; }
+        .user-info-box strong { color: #0f172a; }
+
+        /* Checklist password */
+        .pw-rules {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            font-size: 0.75rem;
+        }
+        .pw-rules .rule {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 3px 0;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+        .pw-rules .rule i {
+            width: 14px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #cbd5e1;
+            transition: color 0.2s;
+        }
+        .pw-rules .rule.ok { color: #059669; }
+        .pw-rules .rule.ok i { color: #22c55e; }
+
+        .pw-strength-bar {
+            height: 4px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .pw-strength-bar i {
+            display: block;
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .modal-pw .modal-footer {
+            background: #fafbfd;
+            border-top: 1px solid #eef2f7;
+            padding: 12px 20px;
+        }
+        .btn-modal {
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 8px 18px;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-modal-cancel {
+            background: #fff;
+            color: #64748b;
+            border: 1.2px solid #e2e8f0;
+        }
+        .btn-modal-cancel:hover { background: #f8fafc; color: #334155; }
+        .btn-modal-save {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(2, 132, 199, 0.28);
+        }
+        .btn-modal-save:hover {
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(2, 132, 199, 0.38);
+        }
+        .btn-modal-save:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 576px) {
+            .auth-container { padding: 14px 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="register-wrapper">
+    <div class="auth-container">
+
+        <!-- Header -->
+        <div class="hospital-header">
+            <div class="hospital-icon">
+                <i class="fas fa-key"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-0">Quên Mật Khẩu</h4>
+            <p class="text-muted small mb-0" style="font-size: 0.75rem;">
+                Nhập tên đăng nhập / mã nhân viên để đặt lại mật khẩu mới
+            </p>
+        </div>
+
+        <!-- Alert -->
+        <div id="response-alert" class="alert mb-2" role="alert">
+            <ul id="error-list" class="mb-0 ps-3"></ul>
+            <span id="success-message"></span>
+        </div>
+
+        <!-- STEP 1: Kiểm tra username -->
+        <form id="check-username-form" autocomplete="off">
+            <div class="mb-2">
+                <label class="form-label">Tên đăng nhập / Mã nhân viên <span class="text-danger">*</span></label>
+                <input type="text"
+                       id="username_input"
+                       name="username"
+                       class="form-control"
+                       placeholder="Ví dụ: NV012 hoặc ten_dang_nhap"
+                       autocomplete="off"
+                       required>
+                <div class="text-muted mt-1" style="font-size: 0.72rem;">
+                    <i class="fas fa-info-circle text-primary me-1"></i>
+                    Bạn có thể nhập tên đăng nhập hoặc mã nhân viên.
+                </div>
+            </div>
+
+            <button type="submit" id="check-btn" class="btn btn-hospital w-100 mb-2 mt-2">
+                <i class="fas fa-search me-1"></i> Kiểm Tra Tài Khoản
+            </button>
+
+            <div class="text-center small text-muted" style="font-size: 0.75rem;">
+                Nhớ ra mật khẩu?
+                <a href="dangnhap.html" class="text-primary fw-bold text-decoration-none">Đăng nhập</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- MODAL ĐỔI MẬT KHẨU -->
+<div class="modal fade modal-pw" id="modalResetPassword" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-lock"></i>
+                    Đặt Lại Mật Khẩu Mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="reset-password-form" autocomplete="off">
+                <input type="hidden" id="reset_user_id" name="user_id" value="">
+                <!-- CSRF token sẽ được JS nạp tự động (nếu backend có endpoint csrf.php) -->
+                <input type="hidden" name="csrf_token" id="csrfToken" value="">
+
+                <div class="modal-body">
+
+                    <div class="user-info-box">
+                        <div class="mb-1">
+                            <span class="lbl">Tài khoản:</span>
+                            <strong id="info-username">—</strong>
+                        </div>
+                        <div class="mb-1">
+                            <span class="lbl">Họ và tên:</span>
+                            <strong id="info-hoten">—</strong>
+                        </div>
+                        <div class="mb-1">
+                            <span class="lbl">Mã nhân viên:</span>
+                            <strong id="info-manv">—</strong>
+                        </div>
+                        <div id="info-email-row" class="d-none">
+                            <span class="lbl">Email nhận thông báo:</span>
+                            <strong id="info-email">—</strong>
+                        </div>
+                    </div>
+
+                    <div id="modal-alert" class="alert d-none py-2 small mb-3" role="alert">
+                        <ul id="modal-error-list" class="mb-0 ps-3"></ul>
+                        <span id="modal-success-msg"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="password"
+                                   id="new_password"
+                                   name="new_password"
+                                   class="form-control"
+                                   placeholder="Tối thiểu 6 ký tự"
+                                   minlength="6"
+                                   required
+                                   autocomplete="new-password">
+                            <button class="btn btn-toggle-pw" type="button" onclick="togglePassword('new_password', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+
+                        <div class="pw-rules" id="pw-rules">
+                            <div class="rule" data-rule="length">
+                                <i class="fas fa-circle"></i>
+                                <span>Tối thiểu <strong>6 ký tự</strong></span>
+                            </div>
+                            <div class="rule" data-rule="upper">
+                                <i class="fas fa-circle"></i>
+                                <span>Có ít nhất <strong>1 chữ in hoa</strong> (A-Z)</span>
+                            </div>
+                            <div class="rule" data-rule="lower">
+                                <i class="fas fa-circle"></i>
+                                <span>Có ít nhất <strong>1 chữ thường</strong> (a-z)</span>
+                            </div>
+                            <div class="rule" data-rule="number">
+                                <i class="fas fa-circle"></i>
+                                <span>Có ít nhất <strong>1 chữ số</strong> (0-9)</span>
+                            </div>
+                            <div class="rule" data-rule="special">
+                                <i class="fas fa-circle"></i>
+                                <span>Có ít nhất <strong>1 ký tự đặc biệt</strong> (!@#$%^&*...)</span>
+                            </div>
+                        </div>
+
+                        <div class="pw-strength-bar">
+                            <i id="pw-strength-fill"></i>
+                        </div>
+                    </div>
+
+                    <div class="mb-2 mt-3">
+                        <label class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="password"
+                                   id="confirm_password"
+                                   name="confirm_password"
+                                   class="form-control"
+                                   placeholder="Nhập lại mật khẩu mới"
+                                   minlength="6"
+                                   required
+                                   autocomplete="new-password">
+                            <button class="btn btn-toggle-pw" type="button" onclick="togglePassword('confirm_password', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-modal btn-modal-cancel" data-bs-dismiss="modal">
+                        Hủy
+                    </button>
+                    <button type="submit" id="reset-btn" class="btn btn-modal btn-modal-save">
+                        <i class="fas fa-check me-1"></i> Đổi Mật Khẩu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ============================================================
+   CẤU HÌNH
+   ============================================================ */
+const CONFIG = {
+    // API xử lý quên mật khẩu (backend gộp)
+    API_RESET_URL: '../../backend/api/quenmatkhau.php',
+    // API lấy CSRF (nếu backend có, không có thì bỏ qua)
+    API_CSRF_URL:  '../../backend/api/csrf.php',
+    // Trang đăng nhập (cùng folder)
+    LOGIN_PAGE:    'dangnhap.html'
+};
+
+/* ============================================================
+   TOGGLE PASSWORD
+   ============================================================ */
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon  = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+/* ============================================================
+   PASSWORD STRENGTH CHECK
+   ============================================================ */
+function checkPasswordStrength(pw) {
+    return {
+        length:  pw.length >= 6,
+        upper:   /[A-Z]/.test(pw),
+        lower:   /[a-z]/.test(pw),
+        number:  /[0-9]/.test(pw),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pw)
+    };
+}
+
+function updatePwRules(pw) {
+    const checks = checkPasswordStrength(pw);
+
+    document.querySelectorAll('#pw-rules .rule').forEach(rule => {
+        const key  = rule.dataset.rule;
+        const icon = rule.querySelector('i');
+
+        if (checks[key]) {
+            rule.classList.add('ok');
+            icon.classList.remove('fa-circle');
+            icon.classList.add('fa-check-circle');
+        } else {
+            rule.classList.remove('ok');
+            icon.classList.remove('fa-check-circle');
+            icon.classList.add('fa-circle');
+        }
+    });
+
+    const passed = Object.values(checks).filter(Boolean).length;
+    const pct    = (passed / 5) * 100;
+    const fill   = document.getElementById('pw-strength-fill');
+
+    fill.style.width = pct + '%';
+
+    if (passed <= 2)       fill.style.background = '#ef4444';
+    else if (passed === 3) fill.style.background = '#f59e0b';
+    else if (passed === 4) fill.style.background = '#3b82f6';
+    else                   fill.style.background = '#22c55e';
+
+    return passed === 5;
+}
+
+/* ============================================================
+   NẠP CSRF TOKEN (nếu backend có endpoint csrf.php)
+   ============================================================ */
+async function loadCsrfToken() {
+    try {
+        const res = await fetch(CONFIG.API_CSRF_URL, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (!res.ok) return '';
+        const data = await res.json();
+        if (data && data.csrf_token) {
+            document.getElementById('csrfToken').value = data.csrf_token;
+            return data.csrf_token;
+        }
+    } catch (e) {
+        console.warn('[QuenMK] Không lấy được CSRF token, bỏ qua.');
+    }
+    return '';
+}
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', async function () {
+
+    /* Nạp CSRF trước (nếu có) */
+    let csrfToken = await loadCsrfToken();
+
+    const checkForm  = document.getElementById('check-username-form');
+    const checkBtn   = document.getElementById('check-btn');
+    const alertBox   = document.getElementById('response-alert');
+    const errorList  = document.getElementById('error-list');
+    const successMsg = document.getElementById('success-message');
+
+    const modalEl    = document.getElementById('modalResetPassword');
+    const modal      = new bootstrap.Modal(modalEl);
+    const resetForm  = document.getElementById('reset-password-form');
+    const resetBtn   = document.getElementById('reset-btn');
+    const modalAlert = document.getElementById('modal-alert');
+    const modalErrL  = document.getElementById('modal-error-list');
+    const modalSucM  = document.getElementById('modal-success-msg');
+
+    const newPwInput   = document.getElementById('new_password');
+    const confirmInput = document.getElementById('confirm_password');
+
+    /* ---------- Helpers alert ---------- */
+    function showMainAlert(type, messages) {
+        alertBox.style.display = 'block';
+        alertBox.classList.remove('alert-danger', 'alert-success');
+        errorList.innerHTML = '';
+        successMsg.textContent = '';
+
+        if (type === 'error') {
+            alertBox.classList.add('alert-danger');
+            messages.forEach(msg => {
+                const li = document.createElement('li');
+                li.textContent = msg;
+                errorList.appendChild(li);
+            });
+        } else {
+            alertBox.classList.add('alert-success');
+            successMsg.textContent = messages;
+        }
+    }
+
+    function showModalAlert(type, messages) {
+        modalAlert.classList.remove('d-none', 'alert-danger', 'alert-success');
+        modalErrL.innerHTML = '';
+        modalSucM.textContent = '';
+
+        if (type === 'error') {
+            modalAlert.classList.add('alert-danger');
+            messages.forEach(msg => {
+                const li = document.createElement('li');
+                li.textContent = msg;
+                modalErrL.appendChild(li);
+            });
+        } else {
+            modalAlert.classList.add('alert-success');
+            modalSucM.textContent = messages;
+        }
+    }
+
+    /* ==========================================================
+       STEP 1: Kiểm tra username
+       ========================================================== */
+    checkForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        alertBox.style.display = 'none';
+        alertBox.classList.remove('alert-danger', 'alert-success');
+        errorList.innerHTML = '';
+        successMsg.textContent = '';
+
+        const username = document.getElementById('username_input').value.trim();
+        if (!username) {
+            showMainAlert('error', ['Vui lòng nhập tên đăng nhập hoặc mã nhân viên!']);
+            return;
+        }
+
+        checkBtn.disabled = true;
+        checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang kiểm tra...';
+
+        fetch(CONFIG.API_RESET_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                action: 'check_username',
+                username: username,
+                csrf_token: csrfToken
+            })
+        })
+        .then(async response => {
+            const data = await response.json().catch(() => null);
+            if (!response.ok) {
+                throw data || { success: false, message: 'Lỗi hệ thống (' + response.status + ')' };
+            }
+            return data;
+        })
+        .then(data => {
+            if (data.success && data.user) {
+                /* Điền thông tin vào modal */
+                document.getElementById('reset_user_id').value = data.user.id;
+                document.getElementById('info-username').textContent = data.user.username;
+                document.getElementById('info-hoten').textContent    = data.user.ho_ten;
+                document.getElementById('info-manv').textContent     = data.user.ma_nv;
+
+                /* Hiển thị email masked nếu có */
+                const emailRow = document.getElementById('info-email-row');
+                const emailEl  = document.getElementById('info-email');
+                if (data.user.has_email && data.user.email_masked) {
+                    emailEl.textContent = data.user.email_masked;
+                    emailRow.classList.remove('d-none');
+                } else {
+                    emailRow.classList.add('d-none');
+                }
+
+                /* Reset modal */
+                resetForm.reset();
+                modalAlert.classList.add('d-none');
+                modalErrL.innerHTML = '';
+                modalSucM.textContent = '';
+                updatePwRules('');
+
+                modal.show();
+            } else {
+                const msgs = (data.errors && Array.isArray(data.errors))
+                    ? data.errors
+                    : [data.message || 'Không tìm thấy tài khoản!'];
+                showMainAlert('error', msgs);
+            }
+        })
+        .catch(error => {
+            const msgs = (error.errors && Array.isArray(error.errors))
+                ? error.errors
+                : [error.message || 'Không thể kết nối đến máy chủ.'];
+            showMainAlert('error', msgs);
+        })
+        .finally(() => {
+            checkBtn.disabled = false;
+            checkBtn.innerHTML = '<i class="fas fa-search me-1"></i> Kiểm Tra Tài Khoản';
+        });
+    });
+
+    /* Real-time check password */
+    newPwInput.addEventListener('input', function () {
+        updatePwRules(this.value);
+    });
+
+    /* ==========================================================
+       STEP 2: Đổi mật khẩu
+       ========================================================== */
+    resetForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        modalAlert.classList.add('d-none');
+        modalErrL.innerHTML = '';
+        modalSucM.textContent = '';
+
+        const userId    = document.getElementById('reset_user_id').value;
+        const newPw     = newPwInput.value;
+        const confirmPw = confirmInput.value;
+
+        const errors = [];
+        const checks = checkPasswordStrength(newPw);
+
+        if (!checks.length)  errors.push('Mật khẩu phải có tối thiểu 6 ký tự.');
+        if (!checks.upper)   errors.push('Mật khẩu phải có ít nhất 1 chữ in hoa (A-Z).');
+        if (!checks.lower)   errors.push('Mật khẩu phải có ít nhất 1 chữ thường (a-z).');
+        if (!checks.number)  errors.push('Mật khẩu phải có ít nhất 1 chữ số (0-9).');
+        if (!checks.special) errors.push('Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%^&*...).');
+        if (newPw !== confirmPw) errors.push('Mật khẩu xác nhận không khớp!');
+
+        if (errors.length > 0) {
+            showModalAlert('error', errors);
+            return;
+        }
+
+        resetBtn.disabled = true;
+        resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang xử lý...';
+
+        fetch(CONFIG.API_RESET_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                action: 'reset_password',
+                user_id: parseInt(userId),
+                new_password: newPw,
+                confirm_password: confirmPw,
+                csrf_token: csrfToken
+            })
+        })
+        .then(async response => {
+            const data = await response.json().catch(() => null);
+            if (!response.ok) {
+                throw data || { success: false, message: 'Lỗi hệ thống (' + response.status + ')' };
+            }
+            return data;
+        })
+        .then(data => {
+            if (data.success) {
+                showModalAlert('success', data.message || 'Đổi mật khẩu thành công!');
+
+                setTimeout(() => {
+                    window.location.href = CONFIG.LOGIN_PAGE;
+                }, 2500);
+            } else {
+                const msgs = (data.errors && Array.isArray(data.errors))
+                    ? data.errors
+                    : [data.message || 'Không thể đổi mật khẩu!'];
+                showModalAlert('error', msgs);
+            }
+        })
+        .catch(error => {
+            const msgs = (error.errors && Array.isArray(error.errors))
+                ? error.errors
+                : [error.message || 'Không thể kết nối đến máy chủ.'];
+            showModalAlert('error', msgs);
+        })
+        .finally(() => {
+            resetBtn.disabled = false;
+            resetBtn.innerHTML = '<i class="fas fa-check me-1"></i> Đổi Mật Khẩu';
+        });
+    });
+
+});
+</script>
+
+</body>
+</html>
