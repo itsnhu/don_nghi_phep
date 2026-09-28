@@ -416,6 +416,24 @@ body {
     background: #f8fafc; color: #4A90E2; border-color: #c9e0f9;
 }
 
+/* ⭐ NÚT IN SỔ */
+.btn-filter-print {
+    background: linear-gradient(135deg, #34d399, #22c55e);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.28);
+}
+.btn-filter-print:hover {
+    transform: translateY(-1px);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.38);
+}
+.btn-filter-print:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 /* CARD & TABLE */
 .card-modern {
     border: none; border-radius: 16px;
@@ -935,6 +953,11 @@ body {
                             <i class="fas fa-filter"></i>
                             <span>Lọc</span>
                         </button>
+                        <button type="button" class="btn-filter btn-filter-print" id="btnPrintAll"
+                                title="In sổ nghỉ phép — In tất cả các đơn đã xác nhận" disabled>
+                            <i class="fas fa-print"></i>
+                            <span>In</span>
+                        </button>
                         <a href="lichsu.html" class="btn-filter btn-filter-outline" title="Đặt lại">
                             <i class="fas fa-rotate-left"></i>
                         </a>
@@ -1163,7 +1186,8 @@ const STATE = {
     csrfToken: '',
     nhanVienId: 0,
     pagination: null,
-    filters:    { status: '', nam: null, search: '' }
+    filters:    { status: '', nam: null, search: '' },
+    firstPrintableLeaveId: null   // ⭐ Đơn đầu tiên đã xác nhận (dùng để in sổ)
 };
 
 /* ============================================================
@@ -1564,6 +1588,18 @@ async function loadLeaves() {
 function renderLeaves(leaves) {
     const tbody = document.getElementById('leavesTbody');
 
+    /* ⭐ Capture id đơn đầu tiên đã xác nhận (dùng để in sổ) */
+    STATE.firstPrintableLeaveId = null;
+    if (leaves && leaves.length > 0) {
+        for (const row of leaves) {
+            if (row.trang_thai === 'da_duyet' || row.trang_thai === 'da_tiep_nhan') {
+                STATE.firstPrintableLeaveId = row.id;
+                break;
+            }
+        }
+    }
+    updatePrintButtonState();
+
     if (!leaves || leaves.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -1611,9 +1647,6 @@ function renderLeaves(leaves) {
                             <a href="${CONFIG.ROUTES.taodon}?id=${row.id}" class="action-btn warn" title="Chỉnh sửa">
                                 <i class="fas fa-edit"></i>
                             </a>` : ''}
-                        <a href="${CONFIG.ROUTES.in}?id=${row.id}" class="action-btn" title="In giấy A4" target="_blank">
-                            <i class="fas fa-print"></i>
-                        </a>
                     </div>
                 </td>
             </tr>`;
@@ -1625,7 +1658,6 @@ function renderYearOptions(currentYear, selectedYear) {
     if (!sel) return;
 
     if (sel.options.length > 0) {
-        /* Đã render */
         if (selectedYear) sel.value = selectedYear;
         return;
     }
@@ -1636,6 +1668,40 @@ function renderYearOptions(currentYear, selectedYear) {
         html += `<option value="${y}" ${y == selected ? 'selected' : ''}>Năm ${y}</option>`;
     }
     sel.innerHTML = html;
+}
+
+/* ============================================================
+   ⭐ NÚT IN SỔ — IN TẤT CẢ ĐƠN ĐÃ XÁC NHẬN
+   ============================================================ */
+function updatePrintButtonState() {
+    const btn = document.getElementById('btnPrintAll');
+    if (!btn) return;
+
+    const hasData = !!STATE.firstPrintableLeaveId;
+    btn.disabled  = !hasData;
+
+    if (hasData) {
+        btn.title = 'In sổ nghỉ phép — In tất cả các đơn đã xác nhận';
+    } else {
+        btn.title = 'Chưa có đơn nào đã xác nhận để in';
+    }
+}
+
+function initPrintAll() {
+    const btn = document.getElementById('btnPrintAll');
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+        const firstId = STATE.firstPrintableLeaveId;
+
+        if (!firstId) {
+            alert('Bạn chưa có đơn nghỉ phép nào đã xác nhận (Đã duyệt / Đã tiếp nhận) để in sổ.');
+            return;
+        }
+
+        /* ⭐ Mở trang in — backend tự lấy TẤT CẢ đơn đã xác nhận của nhân viên */
+        window.open(`${CONFIG.ROUTES.in}?id=${firstId}`, '_blank');
+    });
 }
 
 /* ============================================================
@@ -1664,7 +1730,6 @@ function renderPagination(pg) {
     const buildUrl = (p) => {
         const url = new URL(window.location.href);
         url.searchParams.set('page', p);
-        /* Giữ filter hiện tại */
         if (STATE.filters.search) url.searchParams.set('search', STATE.filters.search);
         if (STATE.filters.status) url.searchParams.set('status', STATE.filters.status);
         if (STATE.filters.nam)    url.searchParams.set('nam', STATE.filters.nam);
@@ -2090,6 +2155,7 @@ function initFilterForm() {
     initLogout();
     initNotifActions();
     initFilterForm();
+    initPrintAll();
 
     await loadLeaves();
     loadNotifications();

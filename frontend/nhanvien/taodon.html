@@ -454,11 +454,24 @@ textarea.form-control-custom.is-invalid {
     padding: 8px 12px; font-family: inherit;
     font-size: 13px; color: #1e293b; outline: none; min-width: 0;
 }
+.input-group-custom select {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234A90E2' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+}
 .input-group-custom input.text-center {
     text-align: center; font-weight: 700; color: #4A90E2;
 }
+.input-group-custom input[readonly] {
+    background: #f8fafc; cursor: default;
+}
 
-/* ⭐ HINT cho số ngày nửa buổi */
+/* ⭐ HINT cho số ngày */
 .so-ngay-hint {
     font-size: 10.5px;
     color: #64748b;
@@ -467,6 +480,30 @@ textarea.form-control-custom.is-invalid {
     font-weight: 500;
 }
 .so-ngay-hint i { color: #4A90E2; margin-right: 2px; }
+
+/* ⭐ CA NGHỈ */
+.ca-nghi-block {
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: #fbfdff;
+    margin-top: 12px;
+}
+.ca-nghi-preview {
+    margin-top: 8px;
+    font-size: 11.5px;
+    color: #1d4ed8;
+    background: #eff6ff;
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid #bfdbfe;
+    display: none;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.4;
+}
+.ca-nghi-preview.show { display: flex; }
+.ca-nghi-preview i { margin-top: 2px; flex-shrink: 0; }
 
 textarea.form-control-custom {
     min-height: 120px; resize: vertical;
@@ -1126,23 +1163,43 @@ textarea.form-control-custom {
                                     </div>
                                 </div>
                                 <div class="col-md-2">
-                                    <!-- ⭐ FIX: Cho phép chỉnh sửa để nghỉ nửa ngày -->
-                                    <label class="form-label-custom" title="Có thể giảm 0.5 nếu nghỉ nửa ngày">
-                                        Số ngày <i class="fas fa-pen-to-square text-primary"></i>
+                                    <label class="form-label-custom" title="Tự động tính theo khoảng ngày + ca nghỉ">
+                                        Số ngày <i class="fas fa-calculator text-primary"></i>
                                     </label>
                                     <div class="input-group-custom" id="wrap_so_ngay">
-                                        <input type="number" step="0.5" min="0.5" name="so_ngay" id="so_ngay"
-                                               value="1" class="text-center" required>
+                                        <input type="number" step="0.5" min="0.5"
+                                               name="so_ngay" id="so_ngay"
+                                               value="1" class="text-center" readonly required>
                                     </div>
                                     <div class="field-error-inline" id="err_so_ngay">
                                         <i class="fas fa-circle-exclamation"></i><span></span>
                                     </div>
                                     <div class="so-ngay-hint">
                                         <i class="fas fa-circle-info"></i>
-                                        Nghỉ nửa ngày: giảm 0.5
+                                        Tự động tính
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- ⭐ CA NGHỈ — ComboBox -->
+                            <div class="ca-nghi-block">
+                                <label class="form-label-custom">
+                                    <i class="fas fa-clock text-primary"></i>
+                                    Chọn ca nghỉ <span class="req">*</span>
+                                </label>
+                                <div class="input-group-custom" id="wrap_ca_nghi">
+                                    <span class="input-icon"><i class="fas fa-list-ul"></i></span>
+                                    <select name="ca_nghi_option" id="ca_nghi_option" required></select>
+                                </div>
+                                <div class="field-error-inline" id="err_ca_nghi">
+                                    <i class="fas fa-circle-exclamation"></i><span></span>
+                                </div>
+                                <div class="ca-nghi-preview" id="caNghiPreview">
+                                    <i class="fas fa-circle-info"></i>
+                                    <span></span>
+                                </div>
+                            </div>
+
                             <div class="mt-2" id="phep_con_lai_hint"
                                  style="display:none; font-size: 12px; color: #1d4ed8;
                                         background: #eff6ff; padding: 6px 12px;
@@ -1462,8 +1519,14 @@ const CONFIG = {
     }
 };
 
-/* ⭐ STATE có phepConLai */
+/* ⭐ STATE */
 const STATE = { user: null, employee: null, role: '', csrfToken: '', phepConLai: null };
+
+/* ⭐ Giới hạn số ngày nghỉ liên tục tối đa (3 ngày liên tục) */
+const MAX_CONSECUTIVE_DAYS = 3;
+
+/* ⭐ Nhãn tiếng Việt cho ca nghỉ */
+const CA_LABEL = { morning: 'Sáng', afternoon: 'Chiều', full: 'Cả ngày' };
 
 function esc(s) {
     if (s == null) return '';
@@ -1482,7 +1545,7 @@ function getRoleLabel(role) {
 }
 function isRole(role, ...names) { return names.includes(role); }
 
-/* ⭐ HELPERS — LẤY NGÀY THEO LOCAL TIMEZONE (YYYY-MM-DD) */
+/* ⭐ HELPERS — NGÀY */
 function todayStr() {
     const d = new Date();
     const y = d.getFullYear();
@@ -1493,6 +1556,15 @@ function todayStr() {
 function tomorrowStr() {
     const d = new Date();
     d.setDate(d.getDate() + 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+}
+function addDaysStr(dateStr, days) {
+    const d = parseYMD(dateStr);
+    if (!d) return '';
+    d.setDate(d.getDate() + days);
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
@@ -1518,6 +1590,13 @@ function titleCaseVi(s) {
         if (!w) return '';
         return w.charAt(0).toLocaleUpperCase('vi-VN') + w.slice(1).toLocaleLowerCase('vi-VN');
     }).join(' ');
+}
+function formatDateVN(dateStr) {
+    const d = parseYMD(dateStr);
+    if (!d) return dateStr;
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${dd}/${mm}/${d.getFullYear()}`;
 }
 
 /* ⭐ SHOW/HIDE INLINE ERROR */
@@ -1548,6 +1627,7 @@ function clearAllInlineErrors() {
         ['err_tu_ngay', 'wrap_tu_ngay'],
         ['err_den_ngay', 'wrap_den_ngay'],
         ['err_so_ngay', 'wrap_so_ngay'],
+        ['err_ca_nghi', 'wrap_ca_nghi'],
         ['err_ly_do', null],
         ['err_ho_ten_nguoi_ky', 'wrap_ho_ten_nguoi_ky'],
         ['err_signature_draw', null],
@@ -1555,9 +1635,80 @@ function clearAllInlineErrors() {
     ].forEach(([errId, wrapId]) => hideFieldError(errId, wrapId));
 }
 
-/* ⭐ VALIDATION FUNCTIONS */
+/* ⭐ CA NGHỈ — BUILD OPTIONS THEO SỐ NGÀY */
+function sessionToDays(s) { return s === 'full' ? 1 : 0.5; }
 
-/* FIX: Phải xin nghỉ TRƯỚC ít nhất 1 ngày */
+function buildCaNghiOptions(totalDays) {
+    const opts = [];
+
+    if (totalDays === 1) {
+        /* 1 ngày: 3 lựa chọn */
+        opts.push({ value: 'morning|morning',     label: 'Ca sáng',     days: 0.5 });
+        opts.push({ value: 'afternoon|afternoon', label: 'Ca chiều',    days: 0.5 });
+        opts.push({ value: 'full|full',           label: 'Nguyên ngày', days: 1 });
+    } else if (totalDays === 2) {
+        /* 2 ngày: các tổ hợp hợp lệ (tổng >= 1.5 ngày) */
+        const combos = [
+            { s: 'morning',   e: 'full',      d: 1.5, l: 'Sáng hôm nay + Cả ngày hôm sau' },
+            { s: 'afternoon', e: 'full',      d: 1.5, l: 'Chiều hôm nay + Cả ngày hôm sau' },
+            { s: 'full',      e: 'morning',   d: 1.5, l: 'Cả ngày hôm nay + Sáng hôm sau' },
+            { s: 'full',      e: 'afternoon', d: 1.5, l: 'Cả ngày hôm nay + Chiều hôm sau' },
+            { s: 'full',      e: 'full',      d: 2,   l: 'Cả ngày hôm nay + Cả ngày hôm sau' }
+        ];
+        combos.forEach(c => opts.push({
+            value: `${c.s}|${c.e}`,
+            label: `${c.l}  (${c.d} ngày)`,
+            days: c.d
+        }));
+    } else {
+        /* >= 3 ngày: middle luôn full, chỉ chọn đầu & cuối */
+        const middle = totalDays - 2;
+        const starts = ['morning', 'afternoon', 'full'];
+        const ends   = ['morning', 'afternoon', 'full'];
+        starts.forEach(s => ends.forEach(e => {
+            const days = sessionToDays(s) + middle + sessionToDays(e);
+            const label = `${CA_LABEL[s]} ngày đầu + ${middle} ngày giữa + ${CA_LABEL[e]} ngày cuối  (${days} ngày)`;
+            opts.push({ value: `${s}|${e}`, label, days });
+        }));
+    }
+    return opts;
+}
+
+function rebuildCaNghiSelect(totalDays) {
+    const sel = document.getElementById('ca_nghi_option');
+    if (!sel) return;
+    const opts = buildCaNghiOptions(totalDays);
+    sel.innerHTML = opts.map(o =>
+        `<option value="${o.value}" data-days="${o.days}">${esc(o.label)}</option>`
+    ).join('');
+    sel.selectedIndex = 0;
+    sel.dataset.totalDays = totalDays;
+}
+
+function getSelectedCaNghi() {
+    const sel = document.getElementById('ca_nghi_option');
+    if (!sel || !sel.value) return { start: 'full', end: 'full', days: 1 };
+    const [start, end] = sel.value.split('|');
+    const days = parseFloat(sel.selectedOptions[0]?.dataset.days || '1');
+    return { start, end, days };
+}
+
+function updateCaNghiPreview(totalDays) {
+    const box = document.getElementById('caNghiPreview');
+    if (!box) return;
+    const span = box.querySelector('span');
+    const sel  = document.getElementById('ca_nghi_option');
+    if (!sel || !sel.selectedOptions[0]) {
+        box.classList.remove('show');
+        return;
+    }
+    const label = sel.selectedOptions[0].textContent;
+    const days  = sel.selectedOptions[0].dataset.days;
+    if (span) span.innerHTML = `<strong>${esc(label)}</strong> — Tổng <strong>${days} ngày</strong> phép sẽ bị trừ.`;
+    box.classList.add('show');
+}
+
+/* ⭐ VALIDATION */
 function validateTuNgay() {
     const val = document.getElementById('tu_ngay').value;
     if (!val) {
@@ -1596,13 +1747,19 @@ function validateDenNgay() {
             showFieldError('err_den_ngay', 'wrap_den_ngay', 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.');
             return false;
         }
+        const totalDays = diffDaysInclusive(td, d);
+        if (totalDays > MAX_CONSECUTIVE_DAYS) {
+            showFieldError('err_den_ngay', 'wrap_den_ngay',
+                `Không thể nghỉ quá ${MAX_CONSECUTIVE_DAYS} ngày liên tục.`);
+            return false;
+        }
     }
     hideFieldError('err_den_ngay', 'wrap_den_ngay');
     return true;
 }
 
 function getTotalDaysFromRange() {
-    const tuVal = document.getElementById('tu_ngay').value;
+    const tuVal  = document.getElementById('tu_ngay').value;
     const denVal = document.getElementById('den_ngay').value;
     if (!tuVal || !denVal) return 0;
     const td = parseYMD(tuVal);
@@ -1612,7 +1769,6 @@ function getTotalDaysFromRange() {
     return diffDaysInclusive(td, dd);
 }
 
-/* ⭐ FIX CỐT LÕI: Chỉ cho phép FULL hoặc NỬA NGÀY */
 function validateSoNgay() {
     const el = document.getElementById('so_ngay');
     const val = parseFloat(el.value);
@@ -1627,31 +1783,13 @@ function validateSoNgay() {
         return false;
     }
 
-    const total = getTotalDaysFromRange();
-    if (total <= 0) {
-        // Chưa chọn đủ ngày — bỏ qua check này
-        hideFieldError('err_so_ngay', 'wrap_so_ngay');
-        return true;
-    }
-
-    // ⭐ Chỉ cho phép 2 giá trị:
-    //   - total         → nghỉ cả ngày
-    //   - total - 0.5   → nghỉ nửa ngày (khi total >= 2)
-    const isFull    = Math.abs(val - total) < 1e-9;
-    const isHalfDay = total >= 2 && Math.abs(val - (total - 0.5)) < 1e-9;
-
-    if (!isFull && !isHalfDay) {
-        let hint;
-        if (total === 1) {
-            hint = `Khoảng đã chọn là 1 ngày → chỉ được nghỉ 1 ngày hoặc 0.5 ngày (nửa buổi).`;
-        } else {
-            hint = `Số ngày nghỉ phải là ${total} (nghỉ cả ngày) hoặc ${total - 0.5} (nghỉ nửa ngày).`;
-        }
-        showFieldError('err_so_ngay', 'wrap_so_ngay', hint);
+    const totalRange = getTotalDaysFromRange();
+    if (totalRange > MAX_CONSECUTIVE_DAYS) {
+        showFieldError('err_so_ngay', 'wrap_so_ngay',
+            `Không thể nghỉ quá ${MAX_CONSECUTIVE_DAYS} ngày liên tục.`);
         return false;
     }
 
-    // Check quota phép còn lại
     if (STATE.phepConLai !== null && !isNaN(STATE.phepConLai)) {
         if (val > STATE.phepConLai) {
             showFieldError('err_so_ngay', 'wrap_so_ngay',
@@ -1811,7 +1949,6 @@ async function loadCsrfToken() {
     return '';
 }
 
-/* ⭐ LOAD PHÉP CÒN LẠI TỪ DASHBOARD */
 async function loadPhepConLai() {
     try {
         const res = await fetch(`${CONFIG.API_HOME}?action=dashboard`, {
@@ -1836,10 +1973,6 @@ async function loadPhepConLai() {
             } else {
                 hintEl.style.display = 'none';
             }
-        }
-        const soNgayEl = document.getElementById('so_ngay');
-        if (soNgayEl && conLai !== null && !isNaN(conLai)) {
-            soNgayEl.max = conLai;
         }
     } catch (e) { console.warn('[Quota]', e); }
 }
@@ -2053,7 +2186,7 @@ function initNotifActions() {
 })();
 
 /* ============================================================
-   SIGNATURE PAD — VẼ + UPLOAD + EXPOSE buildSignatureData
+   SIGNATURE PAD
    ============================================================ */
 let hasDrawn = false;
 let uploadedImageObj = null;
@@ -2303,58 +2436,75 @@ let uploadedImageValid = false;
 })();
 
 /* ============================================================
-   AUTO-TÍNH SỐ NGÀY + VALIDATE REAL-TIME
-   (⭐ HỖ TRỢ NGHỈ NỬA NGÀY — KHÔNG KHÓA READONLY)
+   AUTO-TÍNH SỐ NGÀY + COMBOBOX CA NGHỈ + VALIDATE REAL-TIME
    ============================================================ */
 (function () {
     const tuNgay  = document.getElementById('tu_ngay');
     const denNgay = document.getElementById('den_ngay');
     const soNgay  = document.getElementById('so_ngay');
+    const caSel   = document.getElementById('ca_nghi_option');
     const lyDo    = document.getElementById('ly_do');
     const hoTenKy = document.getElementById('ho_ten_nguoi_ky');
 
-    /* tu_ngay min = NGÀY MAI */
     if (tuNgay) tuNgay.min = tomorrowStr();
 
-    /* ⭐ Cho user sửa so_ngay để chọn nửa ngày */
-    if (soNgay) {
-        soNgay.readOnly = false;
+    /* ⭐ Tính số ngày dựa vào option đang chọn */
+    function calcDaysFromOption() {
+        const sel = getSelectedCaNghi();
+        if (soNgay) soNgay.value = sel.days;
+        validateSoNgay();
+        updateCaNghiPreview(getTotalDaysFromRange());
     }
 
-    /* ⭐ Hàm auto-tính số ngày khi đổi khoảng ngày */
-    function calcDays() {
+    /* ⭐ Cập nhật số ngày + rebuild options khi khoảng ngày đổi */
+    function refreshAll() {
         if (!tuNgay.value || !denNgay.value) return;
         const d1 = parseYMD(tuNgay.value);
         const d2 = parseYMD(denNgay.value);
         if (!d1 || !d2 || d2 < d1) return;
-        const total = diffDaysInclusive(d1, d2);
-        // Đổi khoảng ngày → reset về total
-        // (user có thể sửa lại thành total - 0.5 nếu muốn nghỉ nửa ngày)
-        if (soNgay) soNgay.value = total;
-        validateSoNgay();
+
+        const totalDays = diffDaysInclusive(d1, d2);
+        const curSel = document.getElementById('ca_nghi_option');
+
+        /* Rebuild nếu khoảng ngày thay đổi */
+        if (!curSel.dataset.totalDays || Number(curSel.dataset.totalDays) !== totalDays) {
+            rebuildCaNghiSelect(totalDays);
+        }
+        calcDaysFromOption();
     }
 
-    /* User gõ số ngày → validate ngay */
-    soNgay?.addEventListener('input', validateSoNgay);
-    soNgay?.addEventListener('blur', validateSoNgay);
-
+    /* Ngày bắt đầu thay đổi */
     tuNgay?.addEventListener('change', () => {
         if (tuNgay.value && denNgay.value && denNgay.value < tuNgay.value) {
             denNgay.value = tuNgay.value;
         }
-        if (denNgay) denNgay.min = tuNgay.value || tomorrowStr();
+        if (denNgay) {
+            denNgay.min = tuNgay.value || tomorrowStr();
+            denNgay.max = tuNgay.value
+                ? addDaysStr(tuNgay.value, MAX_CONSECUTIVE_DAYS - 1)
+                : addDaysStr(tomorrowStr(), MAX_CONSECUTIVE_DAYS - 1);
+            if (denNgay.value && denNgay.value > denNgay.max) {
+                denNgay.value = denNgay.max;
+            }
+        }
         validateTuNgay();
         validateDenNgay();
-        calcDays();
+        refreshAll();
     });
 
     denNgay?.addEventListener('change', () => {
         validateDenNgay();
-        calcDays();
+        refreshAll();
     });
 
     tuNgay?.addEventListener('blur', validateTuNgay);
     denNgay?.addEventListener('blur', validateDenNgay);
+
+    /* Khi đổi combobox ca nghỉ */
+    caSel?.addEventListener('change', () => {
+        hideFieldError('err_ca_nghi', 'wrap_ca_nghi');
+        calcDaysFromOption();
+    });
 
     lyDo?.addEventListener('input', function () {
         const countEl = document.getElementById('ly_do_count');
@@ -2364,17 +2514,17 @@ let uploadedImageValid = false;
     lyDo?.addEventListener('blur', validateLyDo);
 
     hoTenKy?.addEventListener('blur', function () {
-        if (this.value.trim()) {
-            this.value = titleCaseVi(this.value).slice(0, 50);
-        }
+        if (this.value.trim()) this.value = titleCaseVi(this.value).slice(0, 50);
         validateHoTenNguoiKy();
     });
     hoTenKy?.addEventListener('input', function () {
-        if (this.value.length > 50) {
-            this.value = this.value.slice(0, 50);
-        }
+        if (this.value.length > 50) this.value = this.value.slice(0, 50);
         if (this.value.trim()) validateHoTenNguoiKy();
     });
+
+    /* Expose để init() gọi */
+    window.__refreshAll = refreshAll;
+    window.__rebuildCaNghiSelect = rebuildCaNghiSelect;
 })();
 
 /* ============================================================
@@ -2421,6 +2571,15 @@ let uploadedImageValid = false;
         if (!validateSoNgay()) errors.push('Số ngày nghỉ không hợp lệ.');
         if (!validateLyDo()) errors.push('Lý do nghỉ phép không hợp lệ.');
         if (!validateHoTenNguoiKy()) errors.push('Họ tên người ký không hợp lệ.');
+
+        /* ⭐ Validate ca nghỉ */
+        const caSel = document.getElementById('ca_nghi_option');
+        if (!caSel || !caSel.value) {
+            showFieldError('err_ca_nghi', 'wrap_ca_nghi', 'Vui lòng chọn ca nghỉ.');
+            errors.push('Vui lòng chọn ca nghỉ.');
+        } else {
+            hideFieldError('err_ca_nghi', 'wrap_ca_nghi');
+        }
 
         const method = document.querySelector('input[name="signature_method"]:checked')?.value || 'draw';
         if (method === 'draw') {
@@ -2477,6 +2636,12 @@ let uploadedImageValid = false;
 
         const fd = new FormData(form);
         fd.set('chu_ky_nguoi_nghi', sigResult.data);
+
+        /* ⭐ Gửi ca nghỉ (tách từ value của combobox) */
+        const selCa = getSelectedCaNghi();
+        fd.set('ca_nghi_start', selCa.start);
+        fd.set('ca_nghi_end',   selCa.end);
+        fd.set('so_ngay', document.getElementById('so_ngay').value);
 
         if (sigResult.method === 'upload') {
             try {
@@ -2880,11 +3045,16 @@ function initLogout() {
     const denNgayEl = document.getElementById('den_ngay');
     const soNgayEl  = document.getElementById('so_ngay');
     if (tuNgayEl)  { tuNgayEl.value = tomorrow; tuNgayEl.min = tomorrow; }
-    if (denNgayEl) { denNgayEl.value = tomorrow; denNgayEl.min = tomorrow; }
-    if (soNgayEl)  soNgayEl.value = 1;
+    if (denNgayEl) {
+        denNgayEl.value = tomorrow;
+        denNgayEl.min = tomorrow;
+        denNgayEl.max = addDaysStr(tomorrow, MAX_CONSECUTIVE_DAYS - 1);
+    }
+    if (soNgayEl) soNgayEl.value = 1;
 
-    /* Dispatch change để calcDays() chạy đồng bộ */
-    tuNgayEl?.dispatchEvent(new Event('change'));
+    /* Build dropdown ca nghỉ cho khoảng 1 ngày + tính số ngày */
+    window.__rebuildCaNghiSelect?.(1);
+    window.__refreshAll?.();
 
     loadNotifications();
 })();

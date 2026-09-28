@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
+/* ============================================================
+   GLOBAL
+   ============================================================ */
 * { box-sizing: border-box; font-family: "Times New Roman", Times, serif; }
 body {
     background-color: #f1f5f9;
@@ -17,7 +20,9 @@ body {
     color: #000;
 }
 
-/* Thanh công cụ */
+/* ============================================================
+   THANH CÔNG CỤ (no-print)
+   ============================================================ */
 .no-print {
     max-width: 210mm;
     margin: 0 auto 15px auto;
@@ -26,9 +31,12 @@ body {
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
+    padding: 0 5mm;
 }
 
-/* Khung giấy A4 */
+/* ============================================================
+   KHUNG GIẤY A4
+   ============================================================ */
 .print-container {
     width: 210mm;
     min-height: 297mm;
@@ -36,58 +44,254 @@ body {
     margin: 0 auto;
     background: #fff;
     box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Header 2 cột */
-.header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+/* ============================================================
+   HEADER 2 CỘT
+   ============================================================ */
+.header-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    table-layout: fixed;
+}
 .header-table td { vertical-align: top; padding: 0; }
-.hospital-name { font-weight: bold; font-size: 12pt; text-transform: uppercase; }
-.emp-info { margin-top: 5px; font-size: 12pt; line-height: 1.4; }
+
+/* --- Cột trái: Tên bệnh viện (chỉ gạch ở phần giữa) --- */
+.hospital-name {
+    font-weight: bold;
+    font-size: 12pt;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 1.6;
+    padding: 0 5px;
+}
+/* Phần giữa được gạch chân — "VIỆN TÂM TRÍ ĐỒNG" */
+.hospital-name .hn-main {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 1px;
+    display: inline;
+}
+
+/* --- Cột phải: Quốc hiệu tiêu ngữ --- */
+.national-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 12pt;
+    white-space: nowrap;
+    line-height: 1.35;
+    letter-spacing: 0.1px;
+}
+.motto {
+    text-align: center;
+    font-weight: bold;
+    font-size: 11pt;
+    margin-top: 2px;
+    white-space: nowrap;
+    line-height: 1.35;
+}
+.underline {
+    width: 130px;
+    height: 1px;
+    background: #000;
+    margin: 3px auto 10px auto;
+}
+
+/* --- Khối Giám đốc --- */
+.director-block {
+    text-align: center;
+    margin-top: 5px;
+}
+.director-title {
+    font-weight: bold;
+    font-size: 12pt;
+    text-transform: uppercase;
+}
+.director-name {
+    font-weight: bold;
+    font-size: 12pt;
+    margin-top: 3px;
+}
+
+/* ============================================================
+   THÔNG TIN CÁ NHÂN (Cấp cho / Chức vụ)
+   ============================================================ */
+.emp-info {
+    margin-top: 5px;
+    font-size: 12pt;
+    line-height: 1.4;
+}
 .val-upper { font-weight: bold; text-transform: uppercase; }
 
-.national-title { text-align: center; font-weight: bold; font-size: 12pt; }
-.motto { text-align: center; font-weight: bold; font-size: 11pt; margin-top: 2px; }
-.underline { width: 130px; height: 1px; background: #000; margin: 3px auto 10px auto; }
-.director-block { text-align: center; margin-top: 5px; }
-.director-title { font-weight: bold; font-size: 12pt; }
-.director-name { font-weight: bold; font-size: 12pt; margin-top: 3px; }
-
-/* Tiêu đề chính */
+/* ============================================================
+   TIÊU ĐỀ CHÍNH
+   ============================================================ */
 .doc-title {
     text-align: center;
     font-weight: bold;
     font-size: 16pt;
     margin: 15px 0 10px 0;
     text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
-.quota-info { font-size: 12pt; margin-bottom: 3px; }
-.notice-info { font-size: 11pt; font-style: italic; margin-bottom: 12px; }
-
-/* Bảng dạng sổ theo dõi 7 cột */
-.ledger-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-.ledger-table th, .ledger-table td {
-    border: 1px solid #000;
-    padding: 5px;
+.quota-info {
+    font-size: 12pt;
+    margin-bottom: 3px;
+    line-height: 1.4;
+}
+.notice-info {
     font-size: 11pt;
-    line-height: 1.3;
+    font-style: italic;
+    margin-bottom: 12px;
 }
+
+/* ============================================================
+   BẢNG DẠNG SỔ THEO DÕI 7 CỘT
+   ============================================================ */
+.ledger-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+    table-layout: fixed;
+}
+
+.ledger-table th,
+.ledger-table td {
+    border: 1px solid #000;
+    padding: 6px 4px;
+    font-size: 10.5pt;
+    line-height: 1.35;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    vertical-align: middle;
+}
+
 .ledger-table th {
     text-align: center;
     font-weight: bold;
-    vertical-align: middle;
     background-color: #f8fafc;
+    vertical-align: middle;
+    letter-spacing: 0.1px;
+    padding: 8px 4px;
+}
+.ledger-table th small {
+    font-weight: normal;
+    font-style: italic;
+    font-size: 9pt;
+    display: inline-block;
+    margin-top: 2px;
 }
 
-/* Ảnh chữ ký — đã TĂNG KÍCH THƯỚC để tên trong ảnh rõ hơn */
+.ledger-table .no-break {
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.ledger-table td.cell-time { vertical-align: top; padding: 6px 5px; }
+.ledger-table td.cell-time .row-line { line-height: 1.45; }
+.ledger-table td.cell-time .ca-nghi-line {
+    font-size: 9pt;
+    color: #333;
+    margin-top: 3px;
+    font-style: italic;
+    line-height: 1.3;
+}
+.ledger-table td.cell-time .ca-nghi-line strong {
+    font-style: normal;
+    color: #0f172a;
+}
+
+.ledger-table td.cell-sign {
+    vertical-align: top;
+    text-align: center;
+    padding: 6px 5px;
+}
+.ledger-table td.cell-sign .ly-do-text {
+    text-align: left;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
 .img-signature {
-    max-height: 110px;
-    max-width: 280px;
+    max-width: 100%;
+    max-height: 90px;
+    width: auto;
+    height: auto;
     display: block;
     margin: 4px auto 0 auto;
     object-fit: contain;
 }
 
-/* Loading / Error */
+.ledger-table td.cell-num {
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+    font-size: 11pt;
+}
+
+.ledger-table td.cell-date {
+    text-align: center;
+    vertical-align: middle;
+    font-size: 10pt;
+    padding: 6px 5px;
+}
+.ledger-table td.cell-date strong {
+    font-size: 11pt;
+}
+
+/* ============================================================
+   PHẦN XÁC NHẬN CỦA TRƯỞNG PHÒNG (cuối trang)
+   ============================================================ */
+.footer-confirm {
+    margin-top: 30px;
+    padding-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    page-break-inside: avoid;
+}
+.footer-confirm .confirm-box {
+    text-align: center;
+    width: 300px;
+}
+.footer-confirm .confirm-title {
+    font-weight: bold;
+    font-size: 12pt;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+}
+.footer-confirm .confirm-sub {
+    font-size: 11pt;
+    font-style: italic;
+    margin-top: 2px;
+    color: #333;
+}
+.footer-confirm .confirm-space {
+    height: 90px;
+}
+.footer-confirm .confirm-name {
+    font-weight: bold;
+    font-size: 12pt;
+}
+
+/* ============================================================
+   THÔNG BÁO GIỚI HẠN (chỉ chữ nghiêng, không icon, không khung, không màu)
+   ============================================================ */
+#printNote {
+    margin-top: 8px;
+    font-size: 10.5pt;
+    font-style: italic;
+    color: #000;
+    line-height: 1.4;
+    text-align: left;
+}
+
+/* ============================================================
+   LOADING / ERROR
+   ============================================================ */
 .loading-box, .error-box {
     max-width: 210mm;
     margin: 40px auto;
@@ -106,36 +310,81 @@ body {
     margin: 0 auto 16px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.error-box .err-icon { font-size: 48px; color: #cbd5e1; margin-bottom: 16px; }
-.error-box .err-msg { color: #64748b; font-size: 15px; font-family: 'Inter', sans-serif; }
+.error-box .err-icon {
+    font-size: 48px;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+}
+.error-box .err-msg {
+    color: #64748b;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+}
 
-/* CSS dành riêng cho máy in */
+/* ============================================================
+   CSS DÀNH RIÊNG CHO MÁY IN
+   ============================================================ */
 @media print {
     body { background: #fff; padding: 0; }
     .no-print { display: none !important; }
+    #printNote { display: none !important; }
+
     .print-container {
         width: 100%;
+        min-height: auto;
         padding: 0;
+        margin: 0;
         box-shadow: none;
+        display: block;
     }
+
     @page {
         size: A4 portrait;
         margin: 15mm 15mm 15mm 20mm;
     }
-    .ledger-table th { background-color: transparent !important; }
-    .img-signature { max-height: 110px; max-width: 280px; }
+
+    .ledger-table th {
+        background-color: transparent !important;
+    }
+
+    .ledger-table th,
+    .ledger-table td {
+        padding: 5px 4px;
+        font-size: 10.5pt;
+    }
+
+    .ledger-table thead {
+        display: table-header-group;
+    }
+    .ledger-table tr {
+        page-break-inside: avoid;
+    }
+
+    .img-signature {
+        max-width: 100%;
+        max-height: 90px;
+    }
+
+    .footer-confirm {
+        margin-top: 25px;
+        page-break-inside: avoid;
+    }
 }
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
+<!-- ============================================================
+     LOADING
+     ============================================================ -->
 <div class="loading-box" id="loadingState">
     <div class="spinner"></div>
     <div style="color:#64748b; font-family: 'Inter', sans-serif;">Đang tải dữ liệu in...</div>
 </div>
 
-<!-- ERROR -->
+<!-- ============================================================
+     ERROR
+     ============================================================ -->
 <div class="error-box d-none" id="errorState" style="display:none;">
     <div class="err-icon"><i class="fas fa-circle-exclamation"></i></div>
     <div class="err-msg" id="errorMsg">Không thể tải dữ liệu.</div>
@@ -174,10 +423,12 @@ body {
         <!-- 1. BỐ CỤC ĐẦU TRANG -->
         <table class="header-table">
             <tr>
-                <td style="width: 50%;">
-                    <div class="hospital-name" id="hospitalName">BỆNH VIỆN TÂM TRÍ ĐỒNG THÁP</div>
+                <td style="width: 45%;">
+                    <div class="hospital-name">
+                        <span class="hn-prefix" id="hospitalPrefix">BỆNH</span> <span class="hn-main" id="hospitalMain">VIỆN TÂM TRÍ ĐỒNG</span> <span class="hn-suffix" id="hospitalSuffix">THÁP</span>
+                    </div>
                 </td>
-                <td style="width: 50%; text-align: center;">
+                <td style="width: 55%;">
                     <div class="national-title">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
                     <div class="motto">Độc lập - Tự do - Hạnh phúc</div>
                     <div class="underline"></div>
@@ -193,13 +444,13 @@ body {
         <!-- 2b. CẤP CHO / CHỨC VỤ / GIÁM ĐỐC -->
         <table class="header-table" style="margin-bottom: 10px;">
             <tr>
-                <td style="width: 50%;">
+                <td style="width: 55%;">
                     <div class="emp-info">
                         Cấp cho: <span class="val-upper" id="capChoHoTen">—</span><br>
                         Chức vụ: <span class="val-upper" id="capChoChucVu">—</span>
                     </div>
                 </td>
-                <td style="width: 50%; text-align: center;">
+                <td style="width: 45%; text-align: center;">
                     <div class="director-block">
                         <div class="director-title">GIÁM ĐỐC</div>
                         <div class="director-name" id="hospitalDirector">—</div>
@@ -222,19 +473,45 @@ body {
 
         <!-- 4. BẢNG DẠNG SỔ THEO DÕI 7 CỘT -->
         <table class="ledger-table">
+            <colgroup>
+                <col style="width: 22%;">
+                <col style="width: 19%;">
+                <col style="width: 14%;">
+                <col style="width: 14%;">
+                <col style="width: 8%;">
+                <col style="width: 9%;">
+                <col style="width: 14%;">
+            </colgroup>
             <thead>
                 <tr>
-                    <th style="width: 15%;">Thời gian nghỉ phép</th>
-                    <th style="width: 20%;">Lý do nghỉ, chữ ký người nghỉ</th>
-                    <th style="width: 16%;">Ý kiến của trưởng khoa/phòng</th>
-                    <th style="width: 16%;">Phê duyệt của TP.ĐD/PGĐ/GĐ</th>
-                    <th style="width: 9%;">Số ngày nghỉ</th>
-                    <th style="width: 9%;">Số ngày phép còn lại</th>
-                    <th style="width: 15%;">Ngày nộp giấy nghỉ phép<br><small style="font-weight: normal; font-style: italic;">(P.NS ghi)</small></th>
+                    <th>Thời gian nghỉ phép</th>
+                    <th>Lý do nghỉ, chữ<br>ký người nghỉ</th>
+                    <th>Ý kiến của<br>trưởng<br>khoa/phòng</th>
+                    <th>Phê duyệt của<br>TP.ĐD / PGĐ / GĐ</th>
+                    <th>Số ngày<br>nghỉ</th>
+                    <th>Số ngày<br>phép<br>còn lại</th>
+                    <th>Ngày nộp<br>giấy nghỉ<br>phép<br>
+                        <small>(P.NS ghi)</small>
+                    </th>
                 </tr>
             </thead>
             <tbody id="ledgerBody"></tbody>
         </table>
+
+        <!-- Thông báo giới hạn ngày in (chỉ chữ nghiêng, không icon, không khung) -->
+        <div id="printNote" style="display:none;">
+            <span id="printNoteText"></span>
+        </div>
+
+        <!-- PHẦN XÁC NHẬN CỦA TRƯỞNG PHÒNG (cuối trang, bên phải) -->
+        <div class="footer-confirm">
+            <div class="confirm-box">
+                <div class="confirm-title">TRƯỞNG PHÒNG XÁC NHẬN</div>
+                <div class="confirm-sub">(Ký, ghi rõ họ tên và đóng dấu)</div>
+                <div class="confirm-space"></div>
+                <div class="confirm-name">.........................................</div>
+            </div>
+        </div>
 
     </div>
 </div>
@@ -246,6 +523,15 @@ body {
 const API = {
     inData: '../../backend/api/in.php',
     loginPage: '../dangnhap_quenmk/dangnhap.html'
+};
+
+/* ============================================================
+   HẰNG SỐ CA NGHỈ
+   ============================================================ */
+const CA_LABEL = {
+    'ca_ngay': 'Cả ngày',
+    'sang':    'Buổi sáng',
+    'chieu':   'Buổi chiều'
 };
 
 /* ============================================================
@@ -267,13 +553,24 @@ function formatDate(s) {
     return `${dd}/${mm}/${d.getFullYear()}`;
 }
 
-function getBuoiNghiText(buoi) {
-    const map = {
-        'sang':    'Buổi sáng (0.5 ngày)',
-        'chieu':   'Buổi chiều (0.5 ngày)',
-        'ca_ngay': 'Nguyên ngày'
-    };
-    return map[buoi] || 'Nguyên ngày';
+function normalizeCaNghi(ca) {
+    const valid = ['ca_ngay', 'sang', 'chieu'];
+    return (ca && valid.includes(ca)) ? ca : 'ca_ngay';
+}
+
+function caNghiLabel(ca) {
+    return CA_LABEL[normalizeCaNghi(ca)] || 'Cả ngày';
+}
+
+function getCaNghiText(buoiStart, buoiEnd) {
+    const s = normalizeCaNghi(buoiStart);
+    const e_ = normalizeCaNghi(buoiEnd !== undefined && buoiEnd !== null ? buoiEnd : s);
+
+    if (s === e_) {
+        if (s === 'ca_ngay') return '';
+        return caNghiLabel(s) + ' (0.5 ngày)';
+    }
+    return caNghiLabel(s) + ' ngày đầu → ' + caNghiLabel(e_) + ' ngày cuối';
 }
 
 function buildSignSrc(path) {
@@ -299,9 +596,32 @@ function showError(msg) {
     document.getElementById('errorMsg').textContent = msg;
 }
 
+/**
+ * Cập nhật tên bệnh viện, chỉ gạch chân phần giữa (không gạch từ đầu và từ cuối).
+ * Ví dụ: "BỆNH VIỆN TÂM TRÍ ĐỒNG THÁP"
+ *   → prefix = "BỆNH", main = "VIỆN TÂM TRÍ ĐỒNG", suffix = "THÁP"
+ */
+function setHospitalName(fullName) {
+    const name = (fullName || '').trim().toUpperCase();
+    const words = name.split(/\s+/).filter(Boolean);
+
+    const elPrefix = document.getElementById('hospitalPrefix');
+    const elMain   = document.getElementById('hospitalMain');
+    const elSuffix = document.getElementById('hospitalSuffix');
+
+    if (words.length >= 3) {
+        elPrefix.textContent = words[0];
+        elMain.textContent   = words.slice(1, -1).join(' ');
+        elSuffix.textContent = words[words.length - 1];
+    } else {
+        elPrefix.textContent = '';
+        elMain.textContent   = name;
+        elSuffix.textContent = '';
+    }
+}
+
 /* ============================================================
-   BUILD LEDGER ROWS — chỉ ảnh chữ ký, KHÔNG render text tên
-   (Tên đã nằm trong ảnh chữ ký — đã composite khi tạo đơn)
+   BUILD LEDGER ROWS
    ============================================================ */
 function buildLedgerRows(allLeaves, totalSlots) {
     let html = '';
@@ -322,35 +642,40 @@ function buildLedgerRows(allLeaves, totalSlots) {
                 ? item.so_phep_con_lai_luc_nghi
                 : '-';
 
-            const buoiText = item.buoi_nghi_text || getBuoiNghiText(item.buoi_nghi);
+            let caNghiText = '';
+            if (item.ca_nghi_label) {
+                caNghiText = item.ca_nghi_label;
+            } else if (item.buoi_nghi_text) {
+                caNghiText = item.buoi_nghi_text;
+            } else {
+                caNghiText = getCaNghiText(item.buoi_nghi, item.buoi_nghi_ket_thuc);
+            }
 
             html += `
                 <tr>
-                    <td style="vertical-align: top;">
-                        <div><strong>Từ:</strong> ${formatDate(item.tu_ngay)}</div>
-                        <div><strong>Đến:</strong> ${formatDate(item.den_ngay)}</div>
-                        <div style="font-size: 9.5pt; color: #333; margin-top: 2px;">
-                            (${e(buoiText)})
-                        </div>
+                    <td class="cell-time">
+                        <div class="row-line"><strong>Từ:</strong> ${formatDate(item.tu_ngay)}</div>
+                        <div class="row-line"><strong>Đến:</strong> ${formatDate(item.den_ngay)}</div>
+                        ${caNghiText ? `<div class="ca-nghi-line"><strong>Ca nghỉ:</strong> ${e(caNghiText)}</div>` : ''}
                     </td>
-                    <td style="vertical-align: top;">
-                        <div>${e(item.ly_do)}</div>
-                        ${signNguoiNghi ? `<img src="${e(signNguoiNghi)}" class="img-signature" alt="Chữ ký">` : ''}
+                    <td class="cell-sign">
+                        <div class="ly-do-text">${e(item.ly_do)}</div>
+                        ${signNguoiNghi ? `<img src="${e(signNguoiNghi)}" class="img-signature" alt="Chữ ký người nghỉ">` : ''}
                     </td>
-                    <td style="vertical-align: middle; text-align: center;">
-                        ${signTruongKhoa ? `<img src="${e(signTruongKhoa)}" class="img-signature" alt="Chữ ký TK">` : ''}
+                    <td class="cell-sign">
+                        ${signTruongKhoa ? `<img src="${e(signTruongKhoa)}" class="img-signature" alt="Chữ ký Trưởng khoa">` : ''}
                     </td>
-                    <td style="vertical-align: middle; text-align: center;">
+                    <td class="cell-sign">
                         ${signLanhDao ? `<img src="${e(signLanhDao)}" class="img-signature" alt="Chữ ký Lãnh đạo">` : ''}
                     </td>
-                    <td style="text-align: center; vertical-align: middle; font-weight: bold;">
+                    <td class="cell-num">
                         ${item.so_ngay}
                     </td>
-                    <td style="text-align: center; vertical-align: middle; font-weight: bold;">
+                    <td class="cell-num">
                         ${soPhepConLai}
                     </td>
-                    <td style="vertical-align: middle; text-align: center; font-size: 10pt;">
-                        <div><strong>${ngayNop || ''}</strong></div>
+                    <td class="cell-date">
+                        ${ngayNop ? `<strong>${ngayNop}</strong>` : '&nbsp;'}
                     </td>
                 </tr>`;
         } else {
@@ -383,18 +708,18 @@ function renderPrint(payload) {
     const hospitalDirector = payload.hospital_director || 'ThS. BS. Đinh Tấn Tài';
     const allLeaves = payload.all_leaves || [];
     const totalSlots = payload.total_slots || 8;
+    const stats = payload.stats || {};
 
-    // Title
     document.title = `In Giấy Nghỉ Phép - ${leave.ho_ten || ''} (Năm ${year})`;
 
-    // Header
-    document.getElementById('hospitalName').textContent = hospitalName;
+    /* Header */
+    setHospitalName(hospitalName);
     document.getElementById('year').textContent = year;
     document.getElementById('capChoHoTen').textContent = capCho.ho_ten || '';
     document.getElementById('capChoChucVu').textContent = capCho.chuc_vu || '';
     document.getElementById('hospitalDirector').textContent = hospitalDirector;
 
-    // Quota
+    /* Quota */
     document.getElementById('quotaYear').textContent = year;
     document.getElementById('quotaYear2').textContent = year;
     document.getElementById('prevYear').textContent = prevYear;
@@ -402,10 +727,37 @@ function renderPrint(payload) {
     document.getElementById('quotaThamNien').textContent = quota.phep_tham_nien ?? 0;
     document.getElementById('quotaChuyenSang').textContent = quota.phep_chuyen_sang ?? 0;
 
-    // Ledger
+    /* Ledger */
     document.getElementById('ledgerBody').innerHTML = buildLedgerRows(allLeaves, totalSlots);
 
-    // Nút quay lại
+    /* Thông báo giới hạn ngày in — chỉ hiện chữ nghiêng, không icon/khung */
+    const noteWrap = document.getElementById('printNote');
+    const noteText = document.getElementById('printNoteText');
+
+    if (noteWrap && noteText) {
+        const daysPrinted  = stats.total_days_printed      ?? 0;
+        const maxQuota     = stats.max_days_quota          ?? 12;
+        const wasCut       = stats.was_cut                 ?? false;
+        const confirmed    = stats.total_confirmed_leaves  ?? 0;
+        const printed      = stats.total_printed_leaves    ?? 0;
+
+        let msg = '';
+        if (wasCut) {
+            msg = `Đã in ${printed}/${confirmed} đơn — Tổng ${daysPrinted}/${maxQuota} ngày phép năm. `
+                + `Các đơn vượt quá giới hạn ngày phép không được in.`;
+        } else if (printed > 0) {
+            msg = `Đã in ${printed} đơn — Tổng ${daysPrinted}/${maxQuota} ngày phép năm ${year}.`;
+        }
+
+        if (msg) {
+            noteText.textContent = msg;
+            noteWrap.style.display = 'block';
+        } else {
+            noteWrap.style.display = 'none';
+        }
+    }
+
+    /* Nút quay lại */
     const btnBack = document.getElementById('btnBack');
     if (leave.id) {
         btnBack.href = `xemdon.html?id=${leave.id}`;
@@ -457,7 +809,6 @@ function renderPrint(payload) {
         const payload = unwrapPayload(json);
         renderPrint(payload);
 
-        // Show print area, hide loading
         document.getElementById('loadingState').style.display = 'none';
         document.getElementById('printArea').style.display = 'block';
 

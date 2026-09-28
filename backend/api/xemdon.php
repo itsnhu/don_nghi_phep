@@ -15,10 +15,6 @@ if (!ob_get_level()) { ob_start(); }
 
 /* ============================================================
    2. LOAD CONFIG (PHẢI CHẠY TRƯỚC SESSION_START)
-   ------------------------------------------------------------
-   Lý do: app.php có thể set session_name() / cookie_path / ...
-   Nếu session_start() chạy trước, session sẽ dùng tên mặc định
-   (PHPSESSID) → không khớp với session đã tạo khi login.
    ============================================================ */
 $configFile = __DIR__ . '/../config/app.php';
 if (!file_exists($configFile)) {
@@ -32,7 +28,7 @@ require_once __DIR__ . '/../config/ketnoisql.php';
 require_once __DIR__ . '/../config/functions.php';
 
 /* ============================================================
-   3. SESSION (SAU CONFIG — để dùng đúng session_name/cookie_path)
+   3. SESSION
    ============================================================ */
 if (session_status() === PHP_SESSION_NONE) {
     @ini_set('session.cookie_httponly', 1);
@@ -113,7 +109,7 @@ $currentEmpId  = $currentUser['nhan_vien_id'] ?? 0;
 $currentUserId = $currentUser['id'] ?? 0;
 
 /* ============================================================
-   8. HELPER FUNCTIONS (fallback nếu functions.php chưa có)
+   8. HELPER FUNCTIONS (fallback)
    ============================================================ */
 if (!function_exists('hasRole')) {
     function hasRole(array|string $roles): bool {
@@ -277,6 +273,57 @@ if (!function_exists('getEmployeeLeaveQuota')) {
 }
 
 /* ============================================================
+   ⭐ 8.1 HELPER MỚI — CHUẨN HOÁ CA NGHỈ
+   ============================================================ */
+
+/**
+ * Chuẩn hoá ca nghỉ về 1 trong 3 giá trị hợp lệ của DB
+ */
+if (!function_exists('normalizeCaNghiDb')) {
+    function normalizeCaNghiDb(?string $ca): string {
+        $valid = ['ca_ngay', 'sang', 'chieu'];
+        if ($ca === null || $ca === '') return 'ca_ngay';
+        return in_array($ca, $valid, true) ? $ca : 'ca_ngay';
+    }
+}
+
+/**
+ * Nhãn tiếng Việt cho ca nghỉ
+ */
+if (!function_exists('caNghiLabel')) {
+    function caNghiLabel(?string $ca): string {
+        $map = [
+            'ca_ngay' => 'Cả ngày',
+            'sang'    => 'Buổi sáng',
+            'chieu'   => 'Buổi chiều',
+        ];
+        return $map[normalizeCaNghiDb($ca)] ?? 'Cả ngày';
+    }
+}
+
+/**
+ * Kiểm tra 2 ca nghỉ có giống nhau không (dùng cho 1 ngày)
+ */
+if (!function_exists('isCaNghiSingle')) {
+    function isCaNghiSingle(?string $start, ?string $end): bool {
+        return normalizeCaNghiDb($start) === normalizeCaNghiDb($end);
+    }
+}
+
+/**
+ * Tính số ngày lịch từ khoảng ngày (inclusive)
+ */
+if (!function_exists('diffDaysInclusive')) {
+    function diffDaysInclusive(?string $tuNgay, ?string $denNgay): int {
+        if (empty($tuNgay) || empty($denNgay)) return 1;
+        $t1 = strtotime($tuNgay);
+        $t2 = strtotime($denNgay);
+        if ($t1 === false || $t2 === false) return 1;
+        return (int)floor(($t2 - $t1) / 86400) + 1;
+    }
+}
+
+/* ============================================================
    9. CSRF HELPERS
    ============================================================ */
 if (!function_exists('generateCsrfToken')) {
@@ -342,6 +389,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
         if (!$don) {
             jsonError('Không tìm thấy đơn hoặc đơn không ở trạng thái chờ phê duyệt.', 404);
         }
+
+        /* ⭐ Mô tả ca nghỉ để ghi log */
+        $caStart = normalizeCaNghiDb($don['buoi_nghi'] ?? 'ca_ngay');
+        $caEnd   = normalizeCaNghiDb($don['buoi_nghi_ket_thuc'] ?? $caStart);
+        $moTaCa  = isCaNghiSingle($caStart, $caEnd)
+            ? caNghiLabel($caStart)
+            : caNghiLabel($caStart) . ' (đầu) → ' . caNghiLabel($caEnd) . ' (cuối)';
 
         $year       = (int)date('Y', strtotime($don['tu_ngay']));
         $nhanVienId = (int)$don['nv_id'];
@@ -417,7 +471,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
                     $id, $currentUserId,
                     'Lãnh đạo phê duyệt nghỉ phép' . ($chuKyLanhDaoPath ? ' (Kèm chữ ký số)' : ''),
                     $don['trang_thai'], $newStatus,
-                    $yKien ?: 'Phê duyệt cho nghỉ ' . $soNgayNghi . ' ngày'
+                    ($yKien ?: 'Phê duyệt cho nghỉ ' . $soNgayNghi . ' ngày') . ' — Ca nghỉ: ' . $moTaCa
                 );
 
                 $db->commit();
@@ -429,7 +483,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
                     createNotification(
                         (int)$nvUserId,
                         'Giấy nghỉ phép đã được Ban Giám Đốc phê duyệt',
-                        "Đơn nghỉ phép {$don['ma_don']} của bạn đã được Lãnh đạo phê duyệt thành công.",
+                        "Đơn nghỉ phép {$don['ma_don']} của bạn đã được Lãnh đạo phê duyệt thành công ({$moTaCa}).",
                         '/nghi-phep/xem.php?id=' . $id
                     );
                 }
@@ -439,7 +493,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
                     createNotification(
                         $ns['id'],
                         'Có giấy nghỉ phép mới cần tiếp nhận',
-                        "Đơn {$don['ma_don']} của {$don['ho_ten']} đã được Ban Giám Đốc duyệt.",
+                        "Đơn {$don['ma_don']} của {$don['ho_ten']} đã được Ban Giám Đốc duyệt ({$moTaCa}).",
                         '/nhan-su/tiep-nhan.php'
                     );
                 }
@@ -465,7 +519,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
 
             recordLeaveHistory(
                 $id, $currentUserId, 'Lãnh đạo từ chối đơn',
-                $don['trang_thai'], $newStatus, $yKien ?: 'Lãnh đạo không chấp thuận nghỉ phép'
+                $don['trang_thai'], $newStatus,
+                ($yKien ?: 'Lãnh đạo không chấp thuận nghỉ phép') . ' — Ca nghỉ: ' . $moTaCa
             );
 
             $stmtUserNV = $db->prepare('SELECT id FROM users WHERE nhan_vien_id = ?');
@@ -507,6 +562,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
         if (!$don) {
             jsonError('Không tìm thấy đơn hoặc đơn không ở trạng thái chờ trưởng khoa.', 404);
         }
+
+        /* ⭐ Mô tả ca nghỉ để ghi log */
+        $caStart = normalizeCaNghiDb($don['buoi_nghi'] ?? 'ca_ngay');
+        $caEnd   = normalizeCaNghiDb($don['buoi_nghi_ket_thuc'] ?? $caStart);
+        $moTaCa  = isCaNghiSingle($caStart, $caEnd)
+            ? caNghiLabel($caStart)
+            : caNghiLabel($caStart) . ' (đầu) → ' . caNghiLabel($caEnd) . ' (cuối)';
 
         if ($decision === 'approve') {
             $signatureMethodTk = $_POST['signature_method_tk'] ?? 'draw';
@@ -576,7 +638,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
                 $id, $currentUserId,
                 'Trưởng khoa đồng ý & chuyển Lãnh đạo' . ($chuKyTkPath ? ' (Kèm chữ ký số)' : ''),
                 $don['trang_thai'], $newStatus,
-                $yKien ?: 'Đồng ý cho nghỉ theo nguyện vọng'
+                ($yKien ?: 'Đồng ý cho nghỉ theo nguyện vọng') . ' — Ca nghỉ: ' . $moTaCa
             );
 
             $stmtLD = $db->query('SELECT id FROM users WHERE vai_tro = "lanh_dao"');
@@ -584,7 +646,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
                 createNotification(
                     $ld['id'],
                     'Có giấy nghỉ phép mới cần phê duyệt',
-                    "Trưởng khoa đã cho ý kiến đơn của {$don['ho_ten']} ({$don['ma_don']})",
+                    "Trưởng khoa đã cho ý kiến đơn của {$don['ho_ten']} ({$don['ma_don']}) — Ca nghỉ: {$moTaCa}",
                     '/phe-duyet/lanh-dao.php'
                 );
             }
@@ -606,7 +668,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
 
             recordLeaveHistory(
                 $id, $currentUserId, 'Trưởng khoa từ chối đơn',
-                $don['trang_thai'], $newStatus, $yKien ?: 'Không chấp thuận nghỉ phép'
+                $don['trang_thai'], $newStatus,
+                ($yKien ?: 'Không chấp thuận nghỉ phép') . ' — Ca nghỉ: ' . $moTaCa
             );
 
             $stmtUserNV = $db->prepare('SELECT id FROM users WHERE nhan_vien_id = ?');
@@ -648,6 +711,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
             jsonError('Không tìm thấy đơn hoặc đơn chưa được duyệt.', 404);
         }
 
+        /* ⭐ Mô tả ca nghỉ để ghi log */
+        $caStart = normalizeCaNghiDb($don['buoi_nghi'] ?? 'ca_ngay');
+        $caEnd   = normalizeCaNghiDb($don['buoi_nghi_ket_thuc'] ?? $caStart);
+        $moTaCa  = isCaNghiSingle($caStart, $caEnd)
+            ? caNghiLabel($caStart)
+            : caNghiLabel($caStart) . ' (đầu) → ' . caNghiLabel($caEnd) . ' (cuối)';
+
         $ngayNop = !empty($ngayNopInput) ? $ngayNopInput : date('Y-m-d', strtotime($don['created_at']));
         $db->beginTransaction();
         try {
@@ -671,7 +741,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
                 $id, $currentUserId,
                 'Phòng Nhân sự đã tiếp nhận giấy',
                 STATUS_DA_DUYET, STATUS_DA_TIEP_NHAN,
-                "Ghi nhận Ngày nộp giấy: " . formatDate($ngayNop) . " (Thời gian tiếp nhận hệ thống: " . date('d/m/Y H:i') . ")"
+                "Ghi nhận Ngày nộp giấy: " . formatDate($ngayNop)
+                    . " (Thời gian tiếp nhận hệ thống: " . date('d/m/Y H:i') . ")"
+                    . " — Ca nghỉ: " . $moTaCa
+                    . " — Số ngày trừ: " . $soNgay
             );
 
             $db->commit();
@@ -683,7 +756,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id > 0) {
                 createNotification(
                     (int)$nvUserId,
                     'Phòng Nhân sự đã tiếp nhận giấy nghỉ phép',
-                    "Đơn {$don['ma_don']} của bạn đã được Phòng Nhân sự tiếp nhận (Ngày nộp: " . formatDate($ngayNop) . ").",
+                    "Đơn {$don['ma_don']} của bạn đã được Phòng Nhân sự tiếp nhận (Ngày nộp: " . formatDate($ngayNop) . ") — Ca nghỉ: {$moTaCa}.",
                     '/nghi-phep/xem.php?id=' . $id
                 );
             }
@@ -759,7 +832,19 @@ $historyList = $stmtHistory->fetchAll();
 $leaveYear = (int)date('Y', strtotime($leave['tu_ngay']));
 $quota     = getEmployeeLeaveQuota((int)$leave['nhan_vien_id'], $leaveYear);
 
-/* ---------- Chuẩn hóa dữ liệu trả về ---------- */
+/* ============================================================
+   ⭐ 12.1 CHUẨN HOÁ CA NGHỈ
+   ============================================================ */
+$caNghiStart    = normalizeCaNghiDb($leave['buoi_nghi']            ?? 'ca_ngay');
+$caNghiEnd      = normalizeCaNghiDb($leave['buoi_nghi_ket_thuc']   ?? $caNghiStart);
+$totalDaysRange = diffDaysInclusive($leave['tu_ngay'] ?? null, $leave['den_ngay'] ?? null);
+$caNghiLabelStr = isCaNghiSingle($caNghiStart, $caNghiEnd)
+    ? caNghiLabel($caNghiStart)
+    : caNghiLabel($caNghiStart) . ' → ' . caNghiLabel($caNghiEnd);
+
+/* ============================================================
+   ⭐ 12.2 CHUẨN HOÁ DỮ LIỆU TRẢ VỀ
+   ============================================================ */
 $leaveData = [
     'id'                        => (int)$leave['id'],
     'ma_don'                    => $leave['ma_don'] ?? '',
@@ -771,6 +856,15 @@ $leaveData = [
     'tu_ngay'                   => $leave['tu_ngay'] ?? null,
     'den_ngay'                  => $leave['den_ngay'] ?? null,
     'so_ngay'                   => (float)($leave['so_ngay'] ?? 0),
+
+    /* ⭐ 2 cột ca nghỉ */
+    'buoi_nghi'                 => $caNghiStart,           // 'ca_ngay' | 'sang' | 'chieu'
+    'buoi_nghi_ket_thuc'        => $caNghiEnd,             // 'ca_ngay' | 'sang' | 'chieu'
+    'ca_nghi_label'             => $caNghiLabelStr,        // chuỗi gợi ý hiển thị
+    'is_nghi_nua_buoi'          => isCaNghiSingle($caNghiStart, $caNghiEnd)
+                                    && $caNghiStart !== 'ca_ngay',
+    'total_days_range'          => $totalDaysRange,        // số ngày lịch
+
     'ly_do'                     => $leave['ly_do'] ?? '',
     'trang_thai'                => $leave['trang_thai'] ?? '',
     'created_at'                => $leave['created_at'] ?? null,
@@ -785,7 +879,9 @@ $leaveData = [
     'ngay_tiep_nhan'            => $leave['ngay_tiep_nhan'] ?? null,
     'nhan_su_ten'               => $leave['nhan_su_ten'] ?? null,
     'nhan_su_user'              => $leave['nhan_su_user'] ?? null,
-    'so_phep_con_lai_luc_nghi'  => $leave['so_phep_con_lai_luc_nghi'] !== null ? (float)$leave['so_phep_con_lai_luc_nghi'] : null,
+    'so_phep_con_lai_luc_nghi'  => $leave['so_phep_con_lai_luc_nghi'] !== null
+                                    ? (float)$leave['so_phep_con_lai_luc_nghi']
+                                    : null,
     'ly_do_tu_choi'             => $leave['ly_do_tu_choi'] ?? null,
 ];
 

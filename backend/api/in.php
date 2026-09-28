@@ -6,13 +6,19 @@
  *  Method: GET
  *  Params: ?id=<nghi_phep_id>
  *  Response: JSON
+ *
+ *  ⭐ QUY TẮC:
+ *   - Chỉ in đơn đã xác nhận (da_duyet / da_tiep_nhan)
+ *   - Tối đa 10 dòng / 1 mặt giấy A4
+ *   - Lấy 10 đơn MỚI NHẤT (theo tu_ngay DESC, id DESC)
+ *   - Hiển thị theo thứ tự thời gian tăng dần
  * ============================================================
  */
 
 /* 1. OUTPUT BUFFERING */
 if (!ob_get_level()) { ob_start(); }
 
-/* 2. LOAD CONFIG TRƯỚC (để dùng đúng session_name/cookie_path) */
+/* 2. LOAD CONFIG */
 $configFile = __DIR__ . '/../config/app.php';
 if (!file_exists($configFile)) {
     header('Content-Type: application/json; charset=utf-8');
@@ -44,6 +50,14 @@ if (!defined('ROLE_NHAN_SU'))     define('ROLE_NHAN_SU',     'nhan_su');
 if (!defined('CURRENT_YEAR'))     define('CURRENT_YEAR', (int)date('Y'));
 if (!defined('HOSPITAL_NAME'))    define('HOSPITAL_NAME', 'BỆNH VIỆN TÂM TRÍ ĐỒNG THÁP');
 if (!defined('HOSPITAL_DIRECTOR')) define('HOSPITAL_DIRECTOR', 'ThS. BS. Đinh Tấn Tài');
+
+/* ⭐ Trạng thái được phép in */
+if (!defined('STATUS_IN_PRINTABLE')) {
+    define('STATUS_IN_PRINTABLE', ['da_duyet', 'da_tiep_nhan']);
+}
+
+/* ⭐ Số dòng tối đa / mặt giấy A4 */
+if (!defined('MAX_ROWS_PER_PAGE')) define('MAX_ROWS_PER_PAGE', 10);
 
 /* 6. HELPER JSON */
 if (!function_exists('jsonResponse')) {
@@ -104,14 +118,54 @@ if (!function_exists('formatDate')) {
         return $t ? date('d/m/Y', $t) : '-';
     }
 }
+
+/* ============================================================
+   8.1 HELPER CA NGHỈ
+   ============================================================ */
+if (!function_exists('normalizeCaNghiDb')) {
+    function normalizeCaNghiDb(?string $ca): string {
+        $valid = ['ca_ngay', 'sang', 'chieu'];
+        if ($ca === null || $ca === '') return 'ca_ngay';
+        return in_array($ca, $valid, true) ? $ca : 'ca_ngay';
+    }
+}
+if (!function_exists('caNghiLabel')) {
+    function caNghiLabel(?string $ca): string {
+        $map = ['ca_ngay' => 'Cả ngày', 'sang' => 'Buổi sáng', 'chieu' => 'Buổi chiều'];
+        return $map[normalizeCaNghiDb($ca)] ?? 'Cả ngày';
+    }
+}
+if (!function_exists('isCaNghiSingle')) {
+    function isCaNghiSingle(?string $start, ?string $end): bool {
+        return normalizeCaNghiDb($start) === normalizeCaNghiDb($end);
+    }
+}
+if (!function_exists('diffDaysInclusive')) {
+    function diffDaysInclusive(?string $tuNgay, ?string $denNgay): int {
+        if (empty($tuNgay) || empty($denNgay)) return 1;
+        $t1 = strtotime($tuNgay);
+        $t2 = strtotime($denNgay);
+        if ($t1 === false || $t2 === false) return 1;
+        return (int)floor(($t2 - $t1) / 86400) + 1;
+    }
+}
 if (!function_exists('getBuoiNghiText')) {
-    function getBuoiNghiText(string $buoi): string {
-        return match ($buoi) {
-            'sang'    => 'Buổi sáng (0.5 ngày)',
-            'chieu'   => 'Buổi chiều (0.5 ngày)',
-            'ca_ngay' => 'Nguyên ngày',
-            default   => 'Nguyên ngày'
-        };
+    function getBuoiNghiText(?string $buoiStart, ?string $buoiEnd = null): string {
+        $s = normalizeCaNghiDb($buoiStart);
+        $e = normalizeCaNghiDb($buoiEnd !== null ? $buoiEnd : $s);
+        if ($s === $e) {
+            if ($s === 'ca_ngay') return '';
+            return caNghiLabel($s) . ' (0.5 ngày)';
+        }
+        return caNghiLabel($s) . ' ngày đầu → ' . caNghiLabel($e) . ' ngày cuối';
+    }
+}
+if (!function_exists('caNghiShortLabel')) {
+    function caNghiShortLabel(?string $buoiStart, ?string $buoiEnd = null): string {
+        $s = normalizeCaNghiDb($buoiStart);
+        $e = normalizeCaNghiDb($buoiEnd !== null ? $buoiEnd : $s);
+        if ($s === $e) return caNghiLabel($s);
+        return caNghiLabel($s) . ' → ' . caNghiLabel($e);
     }
 }
 if (!function_exists('getEmployeeLeaveQuota')) {
@@ -165,7 +219,7 @@ if (!$currentLeave) {
     jsonError('Không tìm thấy dữ liệu giấy nghỉ phép!', 404, 'not_found');
 }
 
-/* 11. PHÂN QUYỀN — nhân viên chỉ được in đơn của mình */
+/* 11. PHÂN QUYỀN */
 if ($userRole === ROLE_NHAN_VIEN && (int)$currentLeave['nhan_vien_id'] !== (int)$currentEmpId) {
     jsonError('Bạn không có quyền in giấy nghỉ phép của nhân viên khác!', 403, 'forbidden');
 }
@@ -174,8 +228,8 @@ $nhanVienId = (int)$currentLeave['nhan_vien_id'];
 $year       = (int)date('Y', strtotime($currentLeave['tu_ngay']));
 $prevYear   = $year - 1;
 
-/* 12. TÌM NGƯỜI "CẤP CHO" (Trưởng khoa có ý kiến) */
-$capChoHoTen = '';
+/* 12. TÌM NGƯỜI "CẤP CHO" */
+$capChoHoTen  = '';
 $capChoChucVu = '';
 $nguoiChoYKienId = $currentLeave['nguoi_cho_y_kien'] ?? null;
 
@@ -225,21 +279,55 @@ if (empty($capChoHoTen)) {
 /* 13. QUOTA NĂM */
 $quota = getEmployeeLeaveQuota($nhanVienId, $year);
 
-/* 14. TẤT CẢ ĐƠN TRONG NĂM */
-$stmtAllLeaves = $db->prepare('
-    SELECT * FROM nghi_phep
-    WHERE nhan_vien_id = ? AND YEAR(tu_ngay) = ?
-    ORDER BY tu_ngay ASC
-');
-$stmtAllLeaves->execute([$nhanVienId, $year]);
-$allLeaves = $stmtAllLeaves->fetchAll();
+/* ============================================================
+   14. ĐẾM TỔNG ĐƠN ĐÃ XÁC NHẬN TRONG NĂM
+   ============================================================ */
+$placeholders = implode(',', array_fill(0, count(STATUS_IN_PRINTABLE), '?'));
 
-/* 15. SỐ DÒNG TỐI THIỂU */
-$totalSlots = max(8, count($allLeaves));
+$stmtCount = $db->prepare("
+    SELECT COUNT(*) FROM nghi_phep
+    WHERE nhan_vien_id = ?
+      AND YEAR(tu_ngay) = ?
+      AND trang_thai IN ($placeholders)
+");
+$stmtCount->execute(array_merge([$nhanVienId, $year], STATUS_IN_PRINTABLE));
+$totalConfirmed = (int)$stmtCount->fetchColumn();
 
 /* ============================================================
-   15b. BUILD MAP user_id → họ tên (cho trưởng khoa + lãnh đạo)
-   ⭐ THÊM MỚI — để render text tên dưới chữ ký trong file in
+   ⭐ 15. LẤY 10 ĐƠN MỚI NHẤT
+   ------------------------------------------------------------
+   - ORDER BY tu_ngay DESC, id DESC → lấy mới nhất trước
+   - LIMIT 10 → giới hạn 10 dòng / 1 mặt giấy
+   ============================================================ */
+$limitRows = MAX_ROWS_PER_PAGE;
+
+$stmtAllLeaves = $db->prepare("
+    SELECT * FROM nghi_phep
+    WHERE nhan_vien_id = ?
+      AND YEAR(tu_ngay) = ?
+      AND trang_thai IN ($placeholders)
+    ORDER BY tu_ngay DESC, id DESC
+    LIMIT $limitRows
+");
+$stmtAllLeaves->execute(array_merge([$nhanVienId, $year], STATUS_IN_PRINTABLE));
+$rawLeaves = $stmtAllLeaves->fetchAll();
+
+/* ⭐ Đảo ngược để hiển thị theo thứ tự thời gian tăng dần (cũ → mới) */
+$allLeaves = array_reverse($rawLeaves);
+
+/* ⭐ Số dòng cố định = 10 (đủ 10 dòng/mặt giấy) */
+$totalSlots = MAX_ROWS_PER_PAGE;
+
+/* Thông tin thống kê */
+$wasCut        = $totalConfirmed > MAX_ROWS_PER_PAGE;
+$printedCount  = count($allLeaves);
+$totalDaysPrint = 0.0;
+foreach ($allLeaves as $lv) {
+    $totalDaysPrint += (float)($lv['so_ngay'] ?? 0);
+}
+
+/* ============================================================
+   15b. BUILD MAP user_id → họ tên
    ============================================================ */
 $userIds = [];
 foreach ($allLeaves as $it) {
@@ -250,13 +338,13 @@ $userIds = array_values(array_unique($userIds));
 
 $userNameMap = [];
 if (!empty($userIds)) {
-    $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+    $ph = implode(',', array_fill(0, count($userIds), '?'));
     try {
         $stmtU = $db->prepare("
             SELECT u.id, nv.ho_ten
             FROM users u
             LEFT JOIN nhan_vien nv ON u.nhan_vien_id = nv.id
-            WHERE u.id IN ($placeholders)
+            WHERE u.id IN ($ph)
         ");
         $stmtU->execute($userIds);
         while ($r = $stmtU->fetch()) {
@@ -267,26 +355,52 @@ if (!empty($userIds)) {
     }
 }
 
-/* 16. CHUẨN HÓA DỮ LIỆU TRẢ VỀ */
+/* ============================================================
+   16. CHUẨN HÓA ĐƠN HIỆN TẠI
+   ============================================================ */
+$currentCaStart = normalizeCaNghiDb($currentLeave['buoi_nghi']          ?? 'ca_ngay');
+$currentCaEnd   = normalizeCaNghiDb($currentLeave['buoi_nghi_ket_thuc'] ?? $currentCaStart);
+
 $leaveData = [
-    'id'          => (int)$currentLeave['id'],
-    'ma_don'      => $currentLeave['ma_don'] ?? '',
-    'ho_ten'      => $currentLeave['ho_ten'] ?? '',
-    'ma_nv'       => $currentLeave['ma_nv'] ?? '',
-    'chuc_vu'     => $currentLeave['chuc_vu'] ?? '',
-    'ten_khoa'    => $currentLeave['ten_khoa'] ?? '',
-    'tu_ngay'     => $currentLeave['tu_ngay'] ?? null,
-    'den_ngay'    => $currentLeave['den_ngay'] ?? null,
+    'id'                 => (int)$currentLeave['id'],
+    'ma_don'             => $currentLeave['ma_don'] ?? '',
+    'ho_ten'             => $currentLeave['ho_ten'] ?? '',
+    'ma_nv'              => $currentLeave['ma_nv'] ?? '',
+    'chuc_vu'            => $currentLeave['chuc_vu'] ?? '',
+    'ten_khoa'           => $currentLeave['ten_khoa'] ?? '',
+    'tu_ngay'            => $currentLeave['tu_ngay'] ?? null,
+    'den_ngay'           => $currentLeave['den_ngay'] ?? null,
+    'trang_thai'         => $currentLeave['trang_thai'] ?? '',
+    'is_printable'       => in_array($currentLeave['trang_thai'] ?? '', STATUS_IN_PRINTABLE, true),
+
+    'buoi_nghi'          => $currentCaStart,
+    'buoi_nghi_ket_thuc' => $currentCaEnd,
+    'buoi_nghi_text'     => getBuoiNghiText($currentCaStart, $currentCaEnd),
+    'ca_nghi_label'      => caNghiShortLabel($currentCaStart, $currentCaEnd),
 ];
 
-/* ⭐ CẬP NHẬT: thêm 3 field tên người ký cho từng dòng */
+/* ============================================================
+   17. CHUẨN HÓA TẤT CẢ ĐƠN
+   ============================================================ */
 $allLeavesData = array_map(function ($it) use ($currentLeave, $userNameMap) {
+
+    $caStart = normalizeCaNghiDb($it['buoi_nghi']          ?? 'ca_ngay');
+    $caEnd   = normalizeCaNghiDb($it['buoi_nghi_ket_thuc'] ?? $caStart);
+
     return [
         'id'                       => (int)$it['id'],
+        'ma_don'                   => $it['ma_don'] ?? '',
         'tu_ngay'                  => $it['tu_ngay'] ?? null,
         'den_ngay'                 => $it['den_ngay'] ?? null,
-        'buoi_nghi'                => $it['buoi_nghi'] ?? 'ca_ngay',
-        'buoi_nghi_text'           => getBuoiNghiText($it['buoi_nghi'] ?? 'ca_ngay'),
+        'trang_thai'               => $it['trang_thai'] ?? '',
+
+        'buoi_nghi'                => $caStart,
+        'buoi_nghi_ket_thuc'       => $caEnd,
+        'buoi_nghi_text'           => getBuoiNghiText($caStart, $caEnd),
+        'ca_nghi_label'            => caNghiShortLabel($caStart, $caEnd),
+        'total_days_range'         => diffDaysInclusive($it['tu_ngay'] ?? null, $it['den_ngay'] ?? null),
+        'is_nghi_nua_buoi'         => isCaNghiSingle($caStart, $caEnd) && $caStart !== 'ca_ngay',
+
         'ly_do'                    => $it['ly_do'] ?? '',
         'chu_ky_nguoi_nghi'        => $it['chu_ky_nguoi_nghi'] ?? null,
         'chu_ky_truong_khoa'       => $it['chu_ky_truong_khoa'] ?? null,
@@ -297,14 +411,13 @@ $allLeavesData = array_map(function ($it) use ($currentLeave, $userNameMap) {
         'ngay_nop_nhan_su'         => $it['ngay_nop_nhan_su'] ?? null,
         'ngay_nop'                 => $it['ngay_nop'] ?? null,
 
-        /* ⭐ MỚI: Tên người ký cho từng cột */
         'ten_nguoi_nghi'  => $currentLeave['ho_ten'] ?? '',
         'ten_truong_khoa' => $userNameMap[(int)($it['nguoi_cho_y_kien'] ?? 0)] ?? '',
         'ten_lanh_dao'    => $userNameMap[(int)($it['nguoi_phe_duyet']  ?? 0)] ?? '',
     ];
 }, $allLeaves);
 
-/* 17. USER INFO CHO FE */
+/* 18. USER INFO CHO FE */
 $currentEmpForFe = getCurrentEmployee();
 $userForFe = [
     'id'           => (int)$currentUserId,
@@ -314,19 +427,31 @@ $userForFe = [
     'ho_ten'       => $currentEmpForFe['ho_ten'] ?? $currentUser['username'] ?? 'Người dùng',
 ];
 
-/* 18. RESPONSE */
+/* ============================================================
+   19. RESPONSE
+   ============================================================ */
 jsonSuccess([
-    'user'              => $userForFe,
-    'leave'             => $leaveData,
-    'cap_cho'           => [
+    'user'    => $userForFe,
+    'leave'   => $leaveData,
+    'cap_cho' => [
         'ho_ten'  => $capChoHoTen,
         'chuc_vu' => $capChoChucVu,
     ],
-    'quota'             => $quota,
-    'all_leaves'        => $allLeavesData,
+    'quota'   => $quota,
+    'all_leaves' => $allLeavesData,
+
+    /* ⭐ Thống kê mới */
+    'stats'   => [
+        'total_confirmed_leaves' => $totalConfirmed,         // tổng đơn đã xác nhận
+        'total_printed_leaves'   => $printedCount,           // số đơn in ra
+        'total_days_printed'     => round($totalDaysPrint, 1),
+        'max_rows_per_page'      => MAX_ROWS_PER_PAGE,       // = 10
+        'was_cut'                => $wasCut,                 // có bị cắt không
+    ],
+
     'year'              => $year,
     'prev_year'         => $prevYear,
     'hospital_name'     => HOSPITAL_NAME,
     'hospital_director' => HOSPITAL_DIRECTOR,
-    'total_slots'       => $totalSlots,
+    'total_slots'       => $totalSlots,                       // = 10 (cố định)
 ]);

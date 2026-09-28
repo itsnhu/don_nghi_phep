@@ -381,12 +381,6 @@ body {
     background: #fff; color: #64748b; border-color: #e2e8f0;
 }
 .btn-head-outline:hover { background: #f8fafc; color: #4A90E2; border-color: #c9e0f9; }
-.btn-head-primary {
-    background: linear-gradient(135deg, #5FA5EC, #4A90E2);
-    color: #fff; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.28);
-}
-.btn-head-primary:hover { transform: translateY(-1px); color: #fff;
-    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.38); }
 
 /* ============================================================
    CARDS
@@ -447,6 +441,55 @@ body {
 .sig-preview-box img { max-height: 70px; max-width: 100%; }
 
 /* ============================================================
+   ⭐ BADGE CA NGHỈ
+   ============================================================ */
+.ca-nghi-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #eaf4ff 0%, #d8ecfc 100%);
+    color: #1d6fc7;
+    border: 1px solid #c9e0f9;
+    border-radius: 20px;
+    font-size: 12.5px; font-weight: 600;
+    line-height: 1.3;
+}
+.ca-nghi-badge.single {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    color: #047857; border-color: #a7f3d0;
+}
+.ca-nghi-badge.multi {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    color: #b45309; border-color: #fde68a;
+}
+.ca-nghi-arrow {
+    color: #94a3b8; font-weight: 700; margin: 0 4px;
+}
+.ca-nghi-inline {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+/* Khối chi tiết — không icon, chỉ text thuần */
+.ca-nghi-detail {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    font-size: 13px; color: #475569;
+}
+.ca-nghi-detail .line {
+    display: flex; align-items: center; gap: 8px;
+    line-height: 1.5;
+}
+.ca-nghi-detail .line strong { color: #0f172a; }
+.ca-nghi-detail .line .muted {
+    color: #94a3b8; margin-left: auto;
+    font-size: 12px; font-style: italic;
+    white-space: nowrap;
+}
+
+/* ============================================================
    TIMELINE
    ============================================================ */
 .timeline-list {
@@ -473,6 +516,9 @@ body {
 .timeline-item.rejected { border-left-color: #ef4444; background: #fef2f2; }
 .timeline-item.rejected::before { background: #ef4444; box-shadow: 0 0 0 2px #fecaca; }
 
+/* ============================================================
+   ⭐ QUOTA ROW — màu chữ đồng bộ
+   ============================================================ */
 .quota-row {
     display: flex; justify-content: space-between; align-items: center;
     padding: 10px 0; font-size: 13.5px;
@@ -481,11 +527,9 @@ body {
 .quota-row:last-child { border-bottom: none; padding-bottom: 0; }
 .quota-row span { color: #64748b; font-weight: 500; }
 .quota-row strong { font-size: 14.5px; color: #0f172a; }
-.quota-row strong.warning { color: #c2410c; }
-.quota-row strong.success { color: #047857; }
 
 /* ============================================================
-   MODAL PROFILE — ĐỒNG BỘ VỚI LICHSU
+   MODAL PROFILE
    ============================================================ */
 .modal-profile .modal-content {
     border: none; border-radius: 14px; overflow: hidden;
@@ -863,9 +907,6 @@ body {
                         <a href="lichsu.html" class="btn-head btn-head-outline">
                             <i class="fas fa-arrow-left"></i> Quay lại
                         </a>
-                        <a href="#" id="btnPrintA4" class="btn-head btn-head-primary" target="_blank">
-                            <i class="fas fa-print"></i> In Giấy A4
-                        </a>
                     </div>
                 </div>
 
@@ -900,6 +941,16 @@ body {
                                     <div class="info-item">
                                         <label>Tổng số ngày nghỉ:</label>
                                         <div class="value primary big"><span id="iSoNgay">—</span> ngày</div>
+                                    </div>
+                                </div>
+
+                                <!-- ⭐ CA NGHỈ -->
+                                <div class="info-row">
+                                    <div class="info-item" style="grid-column: 1 / -1;">
+                                        <label>Ca nghỉ chi tiết:</label>
+                                        <div id="iCaNghiWrap" class="value">
+                                            <span class="text-muted small fst-italic">—</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -963,6 +1014,7 @@ body {
                             </div>
                         </div>
 
+                        <!-- ⭐ HẠN MỨC PHÉP NĂM — màu chữ đồng bộ -->
                         <div class="card-modern">
                             <div class="card-header">
                                 <h6><i class="fas fa-calendar-check text-success"></i> Hạn Mức Phép Năm <span id="quotaYear">—</span></h6>
@@ -974,11 +1026,11 @@ body {
                                 </div>
                                 <div class="quota-row">
                                     <span>Đã nghỉ:</span>
-                                    <strong class="warning"><span id="qDaNghi">0</span> ngày</strong>
+                                    <strong><span id="qDaNghi">0</span> ngày</strong>
                                 </div>
                                 <div class="quota-row">
                                     <span>Còn lại hiện tại:</span>
-                                    <strong class="success"><span id="qConLai">0</span> ngày</strong>
+                                    <strong><span id="qConLai">0</span> ngày</strong>
                                 </div>
                             </div>
                         </div>
@@ -991,7 +1043,7 @@ body {
 </div>
 
 <!-- ============================================================
-     MODAL THÔNG TIN CÁ NHÂN + QUÊN MẬT KHẨU (ĐỒNG BỘ LICHSU)
+     MODAL THÔNG TIN CÁ NHÂN + QUÊN MẬT KHẨU
      ============================================================ -->
 <div class="modal fade modal-profile" id="modalThongTinTaiKhoan" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1205,12 +1257,127 @@ const ROLE_LABEL = {
     ban_lanh_dao: 'Ban Giám Đốc'
 };
 
+/* ⭐ Nhãn ca nghỉ (giá trị DB) */
+const CA_LABEL_DB = {
+    'sang':    'Buổi sáng',
+    'chieu':   'Buổi chiều',
+    'ca_ngay': 'Cả ngày'
+};
+
+/* ⭐ Icon cho badge */
+const CA_ICON_DB = {
+    'sang':    'fa-cloud-sun',
+    'chieu':   'fa-cloud-moon',
+    'ca_ngay': 'fa-sun'
+};
+
+/* ⭐ Khung giờ hành chính */
+const CA_HOURS_DB = {
+    'sang':    '07:00 – 11:30',
+    'chieu':   '13:00 – 17:00',
+    'ca_ngay': '07:00 – 17:00'
+};
+
 function getStatusBadge(status) {
     return STATUS_MAP[status] || `<span class="badge bg-secondary">${e(status)}</span>`;
 }
 
 function getRoleLabel(role) {
     return ROLE_LABEL[role] || 'Người dùng';
+}
+
+/* ============================================================
+   ⭐ FORMAT HIỂN THỊ CA NGHỈ — không icon trong detail
+   ============================================================ */
+function formatCaNghiHtml(start, end, totalDays, tuNgay, denNgay, soNgayThucTe) {
+    const s = start || 'ca_ngay';
+    const e_ = end || s;
+
+    const sLabel = CA_LABEL_DB[s]  || 'Cả ngày';
+    const eLabel = CA_LABEL_DB[e_] || sLabel;
+    const sIcon  = CA_ICON_DB[s]   || 'fa-sun';
+    const eIcon  = CA_ICON_DB[e_]  || sIcon;
+    const sHours = CA_HOURS_DB[s]  || '';
+    const eHours = CA_HOURS_DB[e_] || sHours;
+
+    const tuDate  = tuNgay  ? formatDate(tuNgay)  : '';
+    const denDate = denNgay ? formatDate(denNgay) : tuDate;
+
+    /* Số ngày thực tế (từ DB), fallback về totalDays */
+    const soNgay = (soNgayThucTe !== null && soNgayThucTe !== undefined)
+        ? Number(soNgayThucTe)
+        : totalDays;
+
+    const soNgayText = Number.isInteger(soNgay) ? soNgay : soNgay.toFixed(1);
+
+    /* ============================================================
+       TRƯỜNG HỢP 1 NGÀY (hoặc 2 đầu giống nhau)
+       ============================================================ */
+    if (totalDays <= 1 || s === e_) {
+        const isHalfDay  = (s !== 'ca_ngay');
+        const soNgayLabel = isHalfDay ? '0.5 ngày (nửa buổi)' : '1 ngày (nguyên ngày)';
+
+        return `
+            <div class="ca-nghi-inline">
+                <span class="ca-nghi-badge ${isHalfDay ? 'single' : 'multi'}">
+                    <i class="fas ${sIcon}"></i> ${e(sLabel)}
+                </span>
+            </div>
+            <div class="ca-nghi-detail mt-2">
+                <div class="line">
+                    Ngày nghỉ: <strong>${e(tuDate)}</strong>
+                </div>
+                <div class="line">
+                    Ca nghỉ: <strong>${e(sLabel)}</strong>
+                    <span class="muted">— Trừ ${e(soNgayLabel)}</span>
+                </div>
+                ${sHours ? `
+                <div class="line">
+                    Khung giờ: <strong>${e(sHours)}</strong>
+                </div>` : ''}
+            </div>`;
+    }
+
+    /* ============================================================
+       TRƯỜNG HỢP NHIỀU NGÀY
+       ============================================================ */
+    const middle = Math.max(0, totalDays - 2);
+
+    let detailLines = [];
+    detailLines.push(`
+        <div class="line">
+            Ngày đầu: <strong>${e(sLabel)}</strong> — ${e(tuDate)}
+            ${sHours ? `<span class="muted">(${e(sHours)})</span>` : ''}
+        </div>`);
+
+    if (middle > 0) {
+        detailLines.push(`
+            <div class="line">
+                <strong>${middle}</strong> ngày giữa: Cả ngày
+                <span class="muted">(07:00 – 17:00)</span>
+            </div>`);
+    }
+
+    detailLines.push(`
+        <div class="line">
+            Ngày cuối: <strong>${e(eLabel)}</strong> — ${e(denDate)}
+            ${eHours ? `<span class="muted">(${e(eHours)})</span>` : ''}
+        </div>`);
+
+    return `
+        <div class="ca-nghi-inline">
+            <span class="ca-nghi-badge multi">
+                <i class="fas ${sIcon}"></i> ${e(sLabel)}
+                <span class="ca-nghi-arrow">→</span>
+                <i class="fas ${eIcon}"></i> ${e(eLabel)}
+            </span>
+            <span class="text-muted" style="font-size: 12.5px;">
+                — Trừ <strong>${e(soNgayText)}</strong> ngày phép
+            </span>
+        </div>
+        <div class="ca-nghi-detail mt-2">
+            ${detailLines.join('')}
+        </div>`;
 }
 
 function showError(msg) {
@@ -1463,6 +1630,15 @@ function renderSignature(container, path, alt) {
     container.innerHTML = `<img src="${e(src)}" alt="${e(alt)}">`;
 }
 
+/* ⭐ Tính số ngày lịch từ 2 mốc ngày */
+function diffDaysInclusive(tuNgay, denNgay) {
+    if (!tuNgay || !denNgay) return 1;
+    const t1 = new Date(String(tuNgay).replace(' ', 'T'));
+    const t2 = new Date(String(denNgay).replace(' ', 'T'));
+    if (isNaN(t1) || isNaN(t2)) return 1;
+    return Math.round((t2 - t1) / 86400000) + 1;
+}
+
 function renderLeaveDetail(payload) {
     const lv = payload.leave;
     const hist = payload.history || [];
@@ -1477,7 +1653,6 @@ function renderLeaveDetail(payload) {
     document.title = `Chi Tiết Giấy Nghỉ Phép ${lv.ma_don || ''} - Hệ Thống Quản Lý Giấy Nghỉ Phép`;
     document.getElementById('phMaDon').textContent = lv.ma_don || '—';
     document.getElementById('phCreatedAt').textContent = formatDateTime(lv.created_at);
-    document.getElementById('btnPrintA4').href = `in.html?id=${lv.id}`;
 
     document.getElementById('statusBadgeWrap').innerHTML = getStatusBadge(lv.trang_thai);
 
@@ -1488,6 +1663,18 @@ function renderLeaveDetail(payload) {
     document.getElementById('iSoNgay').textContent = lv.so_ngay;
     document.getElementById('iLyDo').innerHTML = e(lv.ly_do).replace(/\n/g, '<br>');
 
+    /* ⭐ HIỂN THỊ CA NGHỈ */
+    const totalDaysRange = diffDaysInclusive(lv.tu_ngay, lv.den_ngay);
+    const caNghiHtml = formatCaNghiHtml(
+        lv.buoi_nghi || 'ca_ngay',
+        lv.buoi_nghi_ket_thuc || lv.buoi_nghi || 'ca_ngay',
+        totalDaysRange,
+        lv.tu_ngay,
+        lv.den_ngay,
+        lv.so_ngay
+    );
+    document.getElementById('iCaNghiWrap').innerHTML = caNghiHtml;
+
     renderSignature(document.getElementById('iChuKyNguoiNghi'), lv.chu_ky_nguoi_nghi, 'Chữ ký người nghỉ');
 
     const conLai = (lv.so_phep_con_lai_luc_nghi !== null && lv.so_phep_con_lai_luc_nghi !== undefined)
@@ -1495,6 +1682,7 @@ function renderLeaveDetail(payload) {
         : (quota.phep_con_lai ?? '—');
     document.getElementById('iPhepConLai').textContent = conLai;
 
+    /* Ý kiến Trưởng khoa */
     const tk = document.getElementById('iYKienTK');
     if (lv.y_kien_truong_khoa) {
         let html = `<div class="reason-box mb-2">${e(lv.y_kien_truong_khoa).replace(/\n/g, '<br>')}</div>`;
@@ -1510,6 +1698,7 @@ function renderLeaveDetail(payload) {
         tk.innerHTML = '<span class="text-muted small fst-italic">Chưa có ý kiến</span>';
     }
 
+    /* Phê duyệt Lãnh đạo */
     const ld = document.getElementById('iYKienLD');
     if (lv.phe_duyet) {
         let html = `<div class="reason-box mb-2">${e(lv.phe_duyet).replace(/\n/g, '<br>')}</div>`;
@@ -1525,6 +1714,7 @@ function renderLeaveDetail(payload) {
         ld.innerHTML = '<span class="text-muted small fst-italic">Chưa phê duyệt</span>';
     }
 
+    /* Phòng Nhân sự */
     const ns = document.getElementById('iTiepNhanNS');
     if (lv.ngay_nop_nhan_su || lv.ngay_tiep_nhan) {
         ns.innerHTML = `
@@ -1561,6 +1751,7 @@ function renderLeaveDetail(payload) {
             </div>`;
     }
 
+    /* Timeline */
     const tl = document.getElementById('timelineList');
     if (hist.length === 0) {
         tl.innerHTML = '<li class="text-muted small fst-italic">Chưa có lịch sử xử lý.</li>';
@@ -1581,6 +1772,7 @@ function renderLeaveDetail(payload) {
         }).join('');
     }
 
+    /* Quota */
     document.getElementById('quotaYear').textContent = year;
     document.getElementById('qTongPhep').textContent = quota.tong_phep ?? 0;
     document.getElementById('qDaNghi').textContent  = quota.so_ngay_da_nghi ?? 0;
@@ -1676,7 +1868,7 @@ function clearAllFieldErrors() {
 }
 
 /* ============================================================
-   MODAL PROFILE (ĐỒNG BỘ LICHSU)
+   MODAL PROFILE
    ============================================================ */
 (function () {
     const modal = document.getElementById('modalThongTinTaiKhoan');
